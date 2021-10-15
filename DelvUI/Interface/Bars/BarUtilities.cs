@@ -253,7 +253,7 @@ namespace DelvUI.Interface.Bars
             if (config.UseChunks)
             {
                 var partialColor = config.UsePartialFillColor ? config.PartialFillColor : null;
-                return GetChunkedBars(config, chunks, current, max, min, actor, config.Label, color, partialColor, glowConfig);
+                return GetChunkedBars(config, chunks, current, max, min, actor, null, color, partialColor, glowConfig);
             }
 
             BarHud bar = GetProgressBar(config, null, new LabelConfig[] { config.Label }, current, max, min, actor, color, glowConfig);
