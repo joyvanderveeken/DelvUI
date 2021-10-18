@@ -1,4 +1,5 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+﻿using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.ClientState.Statuses;
 using DelvUI.Config;
 using DelvUI.Helpers;
@@ -12,7 +13,7 @@ using System.Runtime.InteropServices;
 
 namespace DelvUI.Interface.GeneralElements
 {
-    public unsafe class UnitFrameHud : DraggableHudElement, IHudElementWithActor
+    public unsafe class UnitFrameHud : DraggableHudElement, IHudElementWithActor, IHudElementWithMouseOver
     {
         public UnitFrameConfig Config => (UnitFrameConfig)_config;
 
@@ -20,18 +21,7 @@ namespace DelvUI.Interface.GeneralElements
 
         private SmoothHPHelper _smoothHPHelper = new SmoothHPHelper();
 
-        private GameObject? _actor = null;
-        public GameObject? Actor
-        {
-            get => _actor;
-            set
-            {
-                if (_actor == value) { return; }
-
-                _actor = value;
-                _smoothHPHelper.Reset();
-            }
-        }
+        public GameObject? Actor { get; set; }
 
         private bool _wasHovering = false;
 
@@ -58,10 +48,20 @@ namespace DelvUI.Interface.GeneralElements
             return (new List<Vector2>() { Config.Position }, new List<Vector2>() { Config.Size });
         }
 
+        public void StopMouseover()
+        {
+            if (_wasHovering)
+            {
+                InputsHelper.Instance.Target = null;
+                _wasHovering = false;
+            }
+        }
+
         public override void DrawChildren(Vector2 origin)
         {
             if (!Config.Enabled || Actor == null)
             {
+                StopMouseover();
                 return;
             }
 
@@ -78,14 +78,14 @@ namespace DelvUI.Interface.GeneralElements
             var startPos = Utils.GetAnchoredPosition(origin + Config.Position, Config.Size, Config.Anchor);
             if (ImGui.IsMouseHoveringRect(startPos, startPos + Config.Size) && !DraggingEnabled)
             {
-                MouseOverHelper.Instance.Target = Actor;
+                InputsHelper.Instance.Target = Actor;
                 _wasHovering = true;
 
-                if (MouseOverHelper.Instance.LeftButtonClicked)
+                if (InputsHelper.Instance.LeftButtonClicked)
                 {
                     Plugin.TargetManager.SetTarget(Actor);
                 }
-                else if (MouseOverHelper.Instance.RightButtonClicked)
+                else if (InputsHelper.Instance.RightButtonClicked)
                 {
                     var agentHud = new IntPtr(Framework.Instance()->GetUiModule()->GetAgentModule()->GetAgentByInternalID(4));
                     _openContextMenuFromTarget(agentHud, Actor.Address);
@@ -93,7 +93,7 @@ namespace DelvUI.Interface.GeneralElements
             }
             else if (_wasHovering)
             {
-                MouseOverHelper.Instance.Target = null;
+                InputsHelper.Instance.Target = null;
                 _wasHovering = false;
             }
         }
@@ -124,7 +124,8 @@ namespace DelvUI.Interface.GeneralElements
             {
                 var healthMissingSize = Config.Size - BarUtilities.GetFillDirectionOffset(healthFill.Size, Config.FillDirection);
                 var healthMissingPos = Config.FillDirection.IsInverted() ? Config.Position : Config.Position + BarUtilities.GetFillDirectionOffset(healthFill.Size, Config.FillDirection);
-                bar.AddForegrounds(new Rect(healthMissingPos, healthMissingSize, Config.HealthMissingColor));
+                PluginConfigColor? color = Config.UseDeathIndicatorBackgroundColor && character.CurrentHp <= 0 ? Config.DeathIndicatorBackgroundColor : Config.HealthMissingColor;
+                bar.AddForegrounds(new Rect(healthMissingPos, healthMissingSize, color));
             }
 
             if (Config.ShieldConfig.Enabled)
@@ -189,6 +190,10 @@ namespace DelvUI.Interface.GeneralElements
                 if (Config.UseJobColorAsBackgroundColor)
                 {
                     return GlobalColors.Instance.SafeColorForJobId(chara.ClassJob.Id);
+                }
+                else if (Config.UseDeathIndicatorBackgroundColor && chara.CurrentHp <= 0)
+                {
+                    return Config.DeathIndicatorBackgroundColor;
                 }
                 else
                 {

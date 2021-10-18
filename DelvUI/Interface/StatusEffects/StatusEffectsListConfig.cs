@@ -103,6 +103,54 @@ namespace DelvUI.Interface.StatusEffects
         }
     }
 
+    [Section("Buffs and Debuffs")]
+    [SubSection("Focus Target Buffs", 0)]
+    public class FocusTargetBuffsListConfig : UnitFrameStatusEffectsListConfig
+    {
+        public new static FocusTargetBuffsListConfig DefaultConfig()
+        {
+            var pos = new Vector2(0, -1);
+            var iconConfig = new StatusEffectIconConfig();
+            iconConfig.DispellableBorderConfig.Enabled = false;
+
+            var config = new FocusTargetBuffsListConfig(pos, HUDConstants.DefaultStatusEffectsListSize, true, false, true, GrowthDirections.Right | GrowthDirections.Up, iconConfig);
+            config.AnchorToUnitFrame = true;
+            config.UnitFrameAnchor = DrawAnchor.TopLeft;
+
+            return config;
+        }
+
+        public FocusTargetBuffsListConfig(Vector2 position, Vector2 size, bool showBuffs, bool showDebuffs, bool showPermanentEffects,
+            GrowthDirections growthDirections, StatusEffectIconConfig iconConfig)
+            : base(position, size, showBuffs, showDebuffs, showPermanentEffects, growthDirections, iconConfig)
+        {
+        }
+    }
+
+    [Section("Buffs and Debuffs")]
+    [SubSection("Focus Target Debuffs", 0)]
+    public class FocusTargetDebuffsListConfig : UnitFrameStatusEffectsListConfig
+    {
+        public new static FocusTargetDebuffsListConfig DefaultConfig()
+        {
+            var pos = new Vector2(0, -85);
+            var iconConfig = new StatusEffectIconConfig();
+            iconConfig.DispellableBorderConfig.Enabled = false;
+
+            var config = new FocusTargetDebuffsListConfig(pos, HUDConstants.DefaultStatusEffectsListSize, false, true, true, GrowthDirections.Right | GrowthDirections.Up, iconConfig);
+            config.AnchorToUnitFrame = true;
+            config.UnitFrameAnchor = DrawAnchor.TopLeft;
+
+            return config;
+        }
+
+        public FocusTargetDebuffsListConfig(Vector2 position, Vector2 size, bool showBuffs, bool showDebuffs, bool showPermanentEffects,
+            GrowthDirections growthDirections, StatusEffectIconConfig iconConfig)
+            : base(position, size, showBuffs, showDebuffs, showPermanentEffects, growthDirections, iconConfig)
+        {
+        }
+    }
+
     public abstract class UnitFrameStatusEffectsListConfig : StatusEffectsListConfig
     {
         [Checkbox("Anchor to Unit Frame")]
@@ -341,19 +389,23 @@ namespace DelvUI.Interface.StatusEffects
         {
             if (input.Length > 0 && sheet != null)
             {
-                Status? status = null;
+                List<Status> statusToAdd = new List<Status>();
 
                 // try id
                 if (uint.TryParse(input, out uint uintValue))
                 {
                     if (uintValue > 0)
                     {
-                        status = sheet.GetRow(uintValue);
+                        Status? status = sheet.GetRow(uintValue);
+                        if (status != null)
+                        {
+                            statusToAdd.Add(status);
+                        }
                     }
                 }
 
                 // try name
-                if (status == null)
+                if (statusToAdd.Count == 0)
                 {
                     var enumerator = sheet.GetEnumerator();
 
@@ -362,13 +414,17 @@ namespace DelvUI.Interface.StatusEffects
                         Status item = enumerator.Current;
                         if (item.Name.ToString().ToLower() == input.ToLower())
                         {
-                            status = item;
-                            break;
+                            statusToAdd.Add(item);
                         }
                     }
                 }
 
-                return AddNewEntry(status);
+                bool added = false;
+                foreach (Status status in statusToAdd)
+                {
+                    added |= AddNewEntry(status);
+                }
+                return added;
             }
 
             return false;

@@ -4,12 +4,11 @@ using DelvUI.Enums;
 using DelvUI.Interface.GeneralElements;
 using DelvUI.Interface.StatusEffects;
 using ImGuiNET;
-using Newtonsoft.Json;
-using System;
 using System.Numerics;
 
 namespace DelvUI.Interface.Party
 {
+    [DisableParentSettings("Position")]
     [Section("Party Frames")]
     [SubSection("General", 0)]
     public class PartyFramesConfig : MovablePluginConfigObject
@@ -22,15 +21,11 @@ namespace DelvUI.Interface.Party
             return config;
         }
 
-        [Checkbox("Lock")]
-        [Order(3)]
+        public Vector2 Size = new Vector2(380, 340);
 
-        public bool Lock = true;
         [Checkbox("Preview", isMonitored = true)]
         [Order(4)]
         public bool Preview = false;
-
-        public Vector2 Size = new Vector2(380, 340);
 
         [Anchor("Bars Anchor", isMonitored = true, spacing = true)]
         [Order(15)]
@@ -111,7 +106,15 @@ namespace DelvUI.Interface.Party
         [Order(15)]
         public PluginConfigColor BackgroundColor = new PluginConfigColor(new Vector4(0f / 255f, 0f / 255f, 0f / 255f, 70f / 100f));
 
-        [Checkbox("Use Role Colors", isMonitored = true, spacing = true)]
+        [Checkbox("Use Death Indicator Background Color", isMonitored = true, spacing = true)]
+        [Order(16)]
+        public bool UseDeathIndicatorBackgroundColor = false;
+
+        [ColorEdit4("Death Indicator Background Color")]
+        [Order(17, collapseWith = nameof(UseDeathIndicatorBackgroundColor))]
+        public PluginConfigColor DeathIndicatorBackgroundColor = new PluginConfigColor(new Vector4(204f / 255f, 3f / 255f, 3f / 255f, 50f / 100f));
+
+        [Checkbox("Use Role Colors", isMonitored = true)]
         [Order(20)]
         public bool UseRoleColors = false;
 
@@ -241,6 +244,8 @@ namespace DelvUI.Interface.Party
         public new static PartyFramesManaBarConfig DefaultConfig()
         {
             var config = new PartyFramesManaBarConfig(Vector2.Zero, new(180, 6));
+            config.HealthBarAnchor = DrawAnchor.Bottom;
+            config.Anchor = DrawAnchor.Bottom;
             config.ValueLabel.Enabled = false;
             return config;
         }
@@ -524,11 +529,36 @@ namespace DelvUI.Interface.Party
         [Order(50)]
         public bool ChangeBorderColorWhenInvuln = true;
 
-        [ColorEdit4("Invuln Border Color")]
-        [Order(55, collapseWith = nameof(ChangeBorderColorWhenInvuln))]
-        public PluginConfigColor BorderColor = new(new Vector4(47f / 255f, 169f / 255f, 215f / 255f, 100f / 100f));
-
         [NestedConfig("Label", 60)]
         public LabelConfig LabelConfig = new LabelConfig(Vector2.Zero, "", DrawAnchor.Center, DrawAnchor.Center);
+    }
+
+    [DisableParentSettings("Position")]
+    [Exportable(false)]
+    [Section("Party Frames")]
+    [SubSection("Cleanse Tracker", 0)]
+    public class PartyFramesCleanseTrackerConfig : MovablePluginConfigObject
+    {
+        public new static PartyFramesCleanseTrackerConfig DefaultConfig() { return new PartyFramesCleanseTrackerConfig(); }
+
+        [Checkbox("Show only on jobs with cleanses", spacing = true)]
+        [Order(10)]
+        public bool CleanseJobsOnly = true;
+
+        [Checkbox("Change Health Bar Color ", spacing = true)]
+        [Order(15)]
+        public bool ChangeHealthBarCleanseColor = true;
+
+        [ColorEdit4("Health Bar Color")]
+        [Order(20, collapseWith = nameof(ChangeHealthBarCleanseColor))]
+        public PluginConfigColor HealthBarColor = new(new Vector4(255f / 255f, 0f / 255f, 104f / 255f, 100f / 100f));
+
+        [Checkbox("Change Border Color", spacing = true)]
+        [Order(25)]
+        public bool ChangeBorderCleanseColor = true;
+
+        [ColorEdit4("Border Color")]
+        [Order(30, collapseWith = nameof(ChangeBorderCleanseColor))]
+        public PluginConfigColor BorderColor = new(new Vector4(255f / 255f, 0f / 255f, 104f / 255f, 100f / 100f));
     }
 }

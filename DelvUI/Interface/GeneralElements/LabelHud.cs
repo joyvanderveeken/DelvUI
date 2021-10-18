@@ -19,16 +19,17 @@ namespace DelvUI.Interface.GeneralElements
             Draw(origin);
         }
 
-        public void Draw(Vector2 origin, Vector2? parentSize = null, GameObject? actor = null, string? actorName = null)
+        public void Draw(Vector2 origin, Vector2? parentSize = null,
+            GameObject? actor = null, string? actorName = null, uint? actorCurrentHp = null, uint? actorMaxHp = null)
         {
             if (!Config.Enabled || Config.GetText() == null)
             {
                 return;
             }
 
-            var text = actor == null && actorName == null ?
+            var text = actor == null && actorName == null && actorCurrentHp == null && actorMaxHp == null ?
                 Config.GetText() :
-                TextTags.GenerateFormattedTextFromTags(actor, Config.GetText(), actorName);
+                TextTagsHelper.FormattedText(Config.GetText(), actor, actorName, actorCurrentHp, actorMaxHp);
 
             DrawLabel(text, origin, parentSize ?? Vector2.Zero, actor);
         }
@@ -43,7 +44,7 @@ namespace DelvUI.Interface.GeneralElements
             DrawHelper.DrawInWindow(ID, pos, size, false, true, (drawList) =>
             {
                 var color = Color(actor);
-                
+
                 if (Config.ShowShadow)
                 {
                     DrawHelper.DrawShadowText(text, pos, color.Base, Config.ShadowColor.Base, drawList, Config.ShadowOffset);
@@ -53,8 +54,8 @@ namespace DelvUI.Interface.GeneralElements
                 {
                     DrawHelper.DrawOutlinedText(text, pos, color.Base, Config.OutlineColor.Base, drawList);
                 }
-                
-                if(!Config.ShowOutline && !Config.ShowShadow)
+
+                if (!Config.ShowOutline && !Config.ShowShadow)
                 {
                     drawList.AddText(pos, color.Base, text);
                 }

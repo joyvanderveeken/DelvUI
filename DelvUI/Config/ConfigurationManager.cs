@@ -1,6 +1,8 @@
+using Dalamud.Interface.Windowing;
 using Dalamud.Logging;
 using DelvUI.Config.Profiles;
 using DelvUI.Config.Tree;
+using DelvUI.Config.Windows;
 using DelvUI.Helpers;
 using DelvUI.Interface;
 using DelvUI.Interface.GeneralElements;
@@ -8,14 +10,11 @@ using DelvUI.Interface.Jobs;
 using DelvUI.Interface.Party;
 using DelvUI.Interface.StatusEffects;
 using ImGuiScene;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace DelvUI.Config
 {
@@ -26,7 +25,25 @@ namespace DelvUI.Config
         public static ConfigurationManager Instance { get; private set; } = null!;
 
         public readonly TextureWrap? BannerImage;
-        public BaseNode ConfigBaseNode;
+
+        private BaseNode _configBaseNode;
+        public BaseNode ConfigBaseNode
+        {
+            get => _configBaseNode;
+            set
+            {
+                _configBaseNode = value;
+                _mainConfigWindow.node = value;
+            }
+        }
+
+        private WindowSystem _windowSystem;
+        private MainConfigWindow _mainConfigWindow;
+        private ChangelogWindow _changelogWindow;
+        private GridWindow _gridWindow;
+
+        public bool IsConfigWindowOpened => _mainConfigWindow.IsOpen;
+        public bool ShowingModalWindow = false;
 
         public GradientDirection GradientDirection
         {
@@ -38,40 +55,6 @@ namespace DelvUI.Config
         }
 
         public string ConfigDirectory;
-
-        private bool _drawConfigWindow;
-        public bool DrawConfigWindow
-        {
-            get => _drawConfigWindow;
-            set
-            {
-                if (_drawConfigWindow == value)
-                {
-                    return;
-                }
-
-                _drawConfigWindow = value;
-
-                if (!_drawConfigWindow)
-                {
-                    if (ConfigBaseNode.NeedsSave)
-                    {
-                        SaveConfigurations();
-                    }
-
-                    if (_needsProfileUpdate)
-                    {
-                        UpdateCurrentProfile();
-                        _needsProfileUpdate = false;
-                    }
-                }
-            }
-        }
-
-        public bool DrawChangelog = false;
-        private string? _changelog = null;
-
-        public bool ShowingModalWindow = false;
 
         private bool _needsProfileUpdate = false;
         private bool _lockHUD = true;
@@ -87,6 +70,8 @@ namespace DelvUI.Config
                 }
 
                 _lockHUD = value;
+                _mainConfigWindow.IsOpen = value;
+                _gridWindow.IsOpen = !value;
 
                 LockEvent?.Invoke(this);
 
@@ -101,28 +86,47 @@ namespace DelvUI.Config
 
         public event ConfigurationManagerEventHandler? ResetEvent;
         public event ConfigurationManagerEventHandler? LockEvent;
+        public event ConfigurationManagerEventHandler? ConfigClosedEvent;
 
-        public ConfigurationManager(
-            TextureWrap? bannerImage,
-            string configDirectory,
-            BaseNode configBaseNode,
-            ConfigurationManagerEventHandler? resetEvent = null,
-            ConfigurationManagerEventHandler? lockEvent = null)
+        public ConfigurationManager()
         {
-            BannerImage = bannerImage;
-            ConfigDirectory = configDirectory;
-            ConfigBaseNode = configBaseNode;
-            ConfigBaseNode.ConfigObjectResetEvent += OnConfigObjectReset;
+            BannerImage = Plugin.BannerTexture;
+            ConfigDirectory = Plugin.PluginInterface.GetPluginConfigDirectory();
 
-            LoadChangelog();
+            _configBaseNode = new BaseNode();
+            InitializeBaseNode(_configBaseNode);
+            _configBaseNode.ConfigObjectResetEvent += OnConfigObjectReset;
+
+            _mainConfigWindow = new MainConfigWindow("DelvUI Settings");
+            _mainConfigWindow.node = _configBaseNode;
+            _mainConfigWindow.CloseAction = () =>
+            {
+                ConfigClosedEvent?.Invoke(this);
+
+                if (ConfigBaseNode.NeedsSave)
+                {
+                    SaveConfigurations();
+                }
+
+                if (_needsProfileUpdate)
+                {
+                    UpdateCurrentProfile();
+                    _needsProfileUpdate = false;
+                }
+            };
+
+            string changelog = LoadChangelog();
+            _changelogWindow = new ChangelogWindow("DelvUI Changelog v" + Plugin.Version, changelog);
+            _gridWindow = new GridWindow("Grid ##DelvUI");
+
+            _windowSystem = new WindowSystem("DelvUI_Windows");
+            _windowSystem.AddWindow(_mainConfigWindow);
+            _windowSystem.AddWindow(_changelogWindow);
+            _windowSystem.AddWindow(_gridWindow);
+
             CheckVersion();
 
             LoadOrInitializeFiles();
-
-            LockEvent = lockEvent;
-
-            ResetEvent = resetEvent;
-            ResetEvent?.Invoke(this);
 
             Plugin.ClientState.Logout += OnLogout;
         }
@@ -152,24 +156,7 @@ namespace DelvUI.Config
             Instance = null!;
         }
 
-        public static void Initialize()
-        {
-            BaseNode node = new();
-            InitializeBaseNode(node);
-
-            TextureWrap? banner = Plugin.BannerTexture;
-
-            var currentResetEvent = (ConfigurationManagerEventHandler?)Instance?.ResetEvent?.Clone();
-            var currentLockEvent = (ConfigurationManagerEventHandler?)Instance?.LockEvent?.Clone();
-
-            Instance = new ConfigurationManager(
-                banner,
-                Plugin.PluginInterface.GetPluginConfigDirectory(),
-                node,
-                currentResetEvent,
-                currentLockEvent
-            );
-        }
+        public static void Initialize() { Instance = new ConfigurationManager(); }
 
         private void OnConfigObjectReset(BaseNode sender)
         {
@@ -182,7 +169,7 @@ namespace DelvUI.Config
             ProfilesManager.Instance.SaveCurrentProfile();
         }
 
-        private void LoadChangelog()
+        private string LoadChangelog()
         {
             string path = Path.Combine(Plugin.AssemblyLocation, "changelog.md");
 
@@ -190,13 +177,14 @@ namespace DelvUI.Config
             {
                 string fullChangelog = File.ReadAllText(path);
                 string versionChangelog = fullChangelog.Split("#", StringSplitOptions.RemoveEmptyEntries)[0];
-                _changelog = versionChangelog.Replace(Plugin.Version, "");
-
+                return versionChangelog.Replace(Plugin.Version, "");
             }
             catch (Exception e)
             {
                 PluginLog.Error("Error loading changelog: " + e.Message);
             }
+
+            return "";
         }
 
         private void CheckVersion()
@@ -220,7 +208,8 @@ namespace DelvUI.Config
                     }
                 }
 
-                DrawChangelog = needsWrite;
+                _changelogWindow.IsOpen = needsWrite;
+
                 if (needsWrite)
                 {
                     File.WriteAllText(path, Plugin.Version);
@@ -232,30 +221,37 @@ namespace DelvUI.Config
             }
         }
 
+        #region windows
+        public void ToggleConfigWindow()
+        {
+            _mainConfigWindow.Toggle();
+        }
+
+        public void OpenConfigWindow()
+        {
+            _mainConfigWindow.IsOpen = false;
+        }
+
+        public void CloseConfigWindow()
+        {
+            _mainConfigWindow.IsOpen = false;
+        }
+
+        public void OpenChangelogWindow()
+        {
+            _changelogWindow.IsOpen = true;
+        }
+
         public void Draw()
         {
-            if (DrawConfigWindow)
-            {
-                if (LockHUD)
-                {
-                    ConfigBaseNode.Draw();
-                }
-                else
-                {
-                    DraggablesHelper.DrawGridWindow();
-                }
-            }
-
-            if (DrawChangelog && _changelog != null)
-            {
-                DrawChangelog = !DrawHelper.DrawChangelogWindow(_changelog);
-            }
+            _windowSystem.Draw();
         }
 
         public void AddExtraSectionNode(SectionNode node)
         {
             ConfigBaseNode.AddExtraSectionNode(node);
         }
+        #endregion
 
         #region config getters and setters
         public PluginConfigObject GetConfigObjectForType(Type type)
@@ -298,6 +294,11 @@ namespace DelvUI.Config
             }
         }
 
+        public void ForceNeedsSave()
+        {
+            ConfigBaseNode.NeedsSave = true;
+        }
+
         public void LoadConfigurations()
         {
             ConfigBaseNode.Load(ConfigDirectory);
@@ -323,7 +324,7 @@ namespace DelvUI.Config
         public void UpdateCurrentProfile()
         {
             // dont update the profile on job change when the config window is opened
-            if (_drawConfigWindow)
+            if (_mainConfigWindow.IsOpen)
             {
                 _needsProfileUpdate = true;
                 return;
@@ -418,6 +419,8 @@ namespace DelvUI.Config
             typeof(PlayerDebuffsListConfig),
             typeof(TargetBuffsListConfig),
             typeof(TargetDebuffsListConfig),
+            typeof(FocusTargetBuffsListConfig),
+            typeof(FocusTargetDebuffsListConfig),
             typeof(CustomEffectsListConfig),
 
             typeof(PartyFramesConfig),

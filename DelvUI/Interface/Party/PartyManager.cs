@@ -25,6 +25,7 @@ namespace DelvUI.Interface.Party
         {
             _raiseTracker = new PartyFramesRaiseTracker();
             _invulnTracker = new PartyFramesInvulnTracker();
+            _cleanseTracker = new PartyFramesCleanseTracker();
 
             Plugin.Framework.Update += FrameworkOnOnUpdateEvent;
             ConfigurationManager.Instance.ResetEvent += OnConfigReset;
@@ -56,6 +57,10 @@ namespace DelvUI.Interface.Party
             {
                 return;
             }
+
+            _raiseTracker.Dispose();
+            _invulnTracker.Dispose();
+            _cleanseTracker.Dispose();
 
             Plugin.Framework.Update -= FrameworkOnOnUpdateEvent;
             _config.ValueChangeEvent -= OnConfigPropertyChanged;
@@ -95,6 +100,7 @@ namespace DelvUI.Interface.Party
 
         private PartyFramesRaiseTracker _raiseTracker;
         private PartyFramesInvulnTracker _invulnTracker;
+        private PartyFramesCleanseTracker _cleanseTracker;
 
         public event PartyMembersChangedEventHandler? MembersChangedEvent;
 
@@ -102,11 +108,8 @@ namespace DelvUI.Interface.Party
         private void FrameworkOnOnUpdateEvent(Framework framework)
         {
             // find party list hud agent
-            if (HudAgent == IntPtr.Zero || PartyListAddon == null)
-            {
-                PartyListAddon = (AddonPartyList*)Plugin.GameGui.GetAddonByName("_PartyList", 1);
-                HudAgent = Plugin.GameGui.FindAgentInterface(PartyListAddon);
-            }
+            PartyListAddon = (AddonPartyList*)Plugin.GameGui.GetAddonByName("_PartyList", 1);
+            HudAgent = Plugin.GameGui.FindAgentInterface(PartyListAddon);
 
             // no need to update on preview mode
             if (_config.Preview)
@@ -144,6 +147,7 @@ namespace DelvUI.Interface.Party
 
                     _raiseTracker.Update(_groupMembers);
                     _invulnTracker.Update(_groupMembers);
+                    _cleanseTracker.Update(_groupMembers);
                     return;
                 }
 
@@ -172,6 +176,7 @@ namespace DelvUI.Interface.Party
 
                 _raiseTracker.Update(_groupMembers);
                 _invulnTracker.Update(_groupMembers);
+                _cleanseTracker.Update(_groupMembers);
             }
             catch (Exception e)
             {
@@ -348,7 +353,7 @@ namespace DelvUI.Interface.Party
             }
 
             IntPtr namePtr = (HudAgent + (PartyCrossWorldNameOffset + PartyCrossWorldEntrySize * index));
-            return Marshal.PtrToStringAnsi(namePtr);
+            return Marshal.PtrToStringUTF8(namePtr);
         }
 
         private uint JobIdForIndex(int index)
@@ -492,7 +497,7 @@ namespace DelvUI.Interface.Party
 
             public PartyListMemberInfo(PartyListMemberRawInfo* info, string? crossWorldName, uint jobId)
             {
-                Name = crossWorldName ?? (Marshal.PtrToStringAnsi(new IntPtr(info->NamePtr)) ?? "");
+                Name = crossWorldName ?? (Marshal.PtrToStringUTF8(new IntPtr(info->NamePtr)) ?? "");
                 ObjectId = info->ObjectId;
                 Type = info->Type;
                 JobId = jobId;
@@ -519,7 +524,7 @@ namespace DelvUI.Interface.Party
             // 5 = summon?
             [FieldOffset(0x14)] public byte Type;
 
-            public string Name => Marshal.PtrToStringAnsi(new IntPtr(NamePtr)) ?? "";
+            public string Name => Marshal.PtrToStringUTF8(new IntPtr(NamePtr)) ?? "";
         }
         #endregion
     }

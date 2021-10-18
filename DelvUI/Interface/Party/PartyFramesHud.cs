@@ -8,15 +8,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Dalamud.Logging;
 
 namespace DelvUI.Interface.Party
 {
-    public class PartyFramesHud : DraggableHudElement
+    public class PartyFramesHud : DraggableHudElement, IHudElementWithMouseOver, IHudElementWithPreview
     {
         private PartyFramesConfig Config => (PartyFramesConfig)_config;
         private PartyFramesHealthBarsConfig _healthBarsConfig;
         private PartyFramesRaiseTrackerConfig _raiseTrackerConfig;
         private PartyFramesInvulnTrackerConfig _invulnTrackerConfig;
+        private PartyFramesCleanseTrackerConfig _cleanseTrackerConfig;
 
         private delegate void OpenContextMenu(IntPtr agentHud, int parentAddonId, int index);
         private readonly OpenContextMenu _openContextMenu;
@@ -33,12 +35,15 @@ namespace DelvUI.Interface.Party
 
         private readonly List<PartyFramesBar> bars;
 
+        private bool Locked => !ConfigurationManager.Instance.IsConfigWindowOpened;
+
 
         public PartyFramesHud(PartyFramesConfig config, string displayName) : base(config, displayName)
         {
             _healthBarsConfig = ConfigurationManager.Instance.GetConfigObject<PartyFramesHealthBarsConfig>();
             _raiseTrackerConfig = ConfigurationManager.Instance.GetConfigObject<PartyFramesRaiseTrackerConfig>();
             _invulnTrackerConfig = ConfigurationManager.Instance.GetConfigObject<PartyFramesInvulnTrackerConfig>();
+            _cleanseTrackerConfig = ConfigurationManager.Instance.GetConfigObject<PartyFramesCleanseTrackerConfig>();
 
             var manaBarConfig = ConfigurationManager.Instance.GetConfigObject<PartyFramesManaBarConfig>();
             var castbarConfig = ConfigurationManager.Instance.GetConfigObject<PartyFramesCastbarConfig>();
@@ -64,7 +69,8 @@ namespace DelvUI.Interface.Party
                     buffsConfig,
                     debuffsConfig,
                     _raiseTrackerConfig,
-                    _invulnTrackerConfig
+                    _invulnTrackerConfig,
+                    _cleanseTrackerConfig
                 );
 
                 bar.MovePlayerEvent += OnMovePlayer;
@@ -245,9 +251,27 @@ namespace DelvUI.Interface.Party
             }
         }
 
+        public void StopPreview()
+        {
+            Config.Preview = false;
+
+            foreach (var bar in bars)
+            {
+                bar.StopPreview();
+            }
+        }
+
         protected override (List<Vector2>, List<Vector2>) ChildrenPositionsAndSizes()
         {
             return (new List<Vector2>() { Config.Position + Config.Size / 2f }, new List<Vector2>() { Config.Size });
+        }
+
+        public void StopMouseover()
+        {
+            foreach (var bar in bars)
+            {
+                bar.StopMouseover();
+            }
         }
 
         public override void DrawChildren(Vector2 origin)
@@ -259,19 +283,13 @@ namespace DelvUI.Interface.Party
 
             var windowFlags = ImGuiWindowFlags.NoScrollbar |
                 ImGuiWindowFlags.NoTitleBar |
-                ImGuiWindowFlags.NoBackground |
                 ImGuiWindowFlags.NoFocusOnAppearing |
                 ImGuiWindowFlags.NoBringToFrontOnFocus;
 
-            bool canDrag = !Config.Lock && !DraggingEnabled;
+            bool canDrag = !Locked && !DraggingEnabled;
             if (!canDrag)
             {
                 windowFlags |= ImGuiWindowFlags.NoMove;
-            }
-
-            if (Config.Lock || DraggingEnabled)
-            {
-                ImGui.SetNextWindowPos(origin + Config.Position);
                 windowFlags |= ImGuiWindowFlags.NoResize;
             }
 
@@ -283,18 +301,13 @@ namespace DelvUI.Interface.Party
 
                 if (canDrag)
                 {
-                    Config.Position = windowPos - origin;
-                }
-
-                // recalculate layout on settings or size change
-                var contentStartPos = windowPos + _contentMargin;
-                var maxSize = windowSize - _contentMargin * 2;
-
-                // preview
-                if (!Config.Lock)
-                {
-                    var margin = new Vector2(4, 0);
-                    drawList.AddRectFilled(contentStartPos, contentStartPos + maxSize, 0x66000000);
+                    Vector2 newPosition = windowPos - origin;
+                    if (Config.Position != newPosition)
+                    {
+                        // have to flag it like this sadly
+                        ConfigurationManager.Instance.ForceNeedsSave();
+                        Config.Position = windowPos - origin;
+                    }
                 }
 
                 var count = PartyManager.Instance.MemberCount;
@@ -302,6 +315,10 @@ namespace DelvUI.Interface.Party
                 {
                     return;
                 }
+
+                // recalculate layout on settings or size change
+                var contentStartPos = windowPos + _contentMargin;
+                var maxSize = windowSize - _contentMargin * 2;
 
                 if (_layoutDirty || _size != maxSize || _memberCount != count)
                 {
@@ -330,6 +347,7 @@ namespace DelvUI.Interface.Party
                 var enmityLeaderIndex = -1;
                 var enmitySecondIndex = -1;
                 List<int> raisedIndexes = new List<int>();
+                List<int> cleanseIndexes = new List<int>();
 
                 // bars
                 for (int i = 0; i < count; i++)
@@ -341,6 +359,18 @@ namespace DelvUI.Interface.Party
                         if (target != null && member.ObjectId == target.ObjectId)
                         {
                             targetIndex = i;
+                            continue;
+                        }
+
+                        bool cleanseCheck = true;
+                        if (_cleanseTrackerConfig.CleanseJobsOnly)
+                        {
+                            cleanseCheck = Utils.IsOnCleanseJob();
+                        }
+                        
+                        if (_cleanseTrackerConfig.Enabled && _cleanseTrackerConfig.ChangeBorderCleanseColor && member.HasDispellableDebuff && cleanseCheck)
+                        {
+                            cleanseIndexes.Add(i);
                             continue;
                         }
 
@@ -394,6 +424,12 @@ namespace DelvUI.Interface.Party
                 {
                     bars[targetIndex].Draw(origin, drawList, _healthBarsConfig.ColorsConfig.TargetBordercolor);
                 }
+
+                // cleanseable debuff
+                foreach (int index in cleanseIndexes)
+                {
+                    bars[index].Draw(origin, drawList, _cleanseTrackerConfig.BorderColor);
+                }
             };
 
             Action drawElementsAction = () =>
@@ -408,8 +444,13 @@ namespace DelvUI.Interface.Party
             if (canDrag)
             {
                 // size and position
-                ImGui.SetNextWindowPos(Config.Position - _contentMargin, ImGuiCond.FirstUseEver);
+                ImGui.SetNextWindowPos(origin + Config.Position, ImGuiCond.FirstUseEver);
                 ImGui.SetNextWindowSize(Config.Size + _contentMargin * 2, ImGuiCond.FirstUseEver);
+
+                ImGui.PushStyleColor(ImGuiCol.Border, 0x66FFFFFF);
+                ImGui.PushStyleColor(ImGuiCol.WindowBg, 0x66000000);
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 1);
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
 
                 bool begin = ImGui.Begin(ID, windowFlags);
                 if (!begin)
@@ -421,11 +462,15 @@ namespace DelvUI.Interface.Party
                 drawBarsAction(ImGui.GetWindowDrawList());
                 ImGui.End();
 
+                ImGui.PopStyleColor(2);
+                ImGui.PopStyleVar(2);
+
                 drawElementsAction();
             }
             else
             {
-                DrawHelper.DrawInWindow(ID, origin + Config.Position, Config.Size, !Config.Lock, false, true, windowFlags, drawBarsAction);
+                windowFlags |= ImGuiWindowFlags.NoBackground;
+                DrawHelper.DrawInWindow(ID, origin + Config.Position, Config.Size, !Locked, false, true, windowFlags, drawBarsAction);
                 drawElementsAction();
             }
         }

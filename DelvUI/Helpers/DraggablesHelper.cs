@@ -96,21 +96,35 @@ namespace DelvUI.Helpers
             bool canTakeInput = true;
 
             // selected
-            if (selectedElement != null && !hudHelper.IsElementHidden(selectedElement))
+            if (selectedElement != null)
             {
-                selectedElement.CanTakeInputForDrag = true;
-                selectedElement.Draw(origin);
-                canTakeInput = !selectedElement.NeedsInputForDrag;
+                if (!hudHelper.IsElementHidden(selectedElement))
+                {
+                    selectedElement.CanTakeInputForDrag = true;
+                    selectedElement.Draw(origin);
+                    canTakeInput = !selectedElement.NeedsInputForDrag;
+                }
+                else if (selectedElement is IHudElementWithMouseOver elementWithMouseOver)
+                {
+                    elementWithMouseOver.StopMouseover();
+                }
             }
 
             // all
             foreach (DraggableHudElement element in elements)
             {
-                if (element == selectedElement || hudHelper.IsElementHidden(element)) { continue; }
+                if (element == selectedElement) { continue; }
 
-                element.CanTakeInputForDrag = canTakeInput;
-                element.Draw(origin);
-                canTakeInput = !canTakeInput ? false : !element.NeedsInputForDrag;
+                if (!hudHelper.IsElementHidden(element))
+                {
+                    element.CanTakeInputForDrag = canTakeInput;
+                    element.Draw(origin);
+                    canTakeInput = !canTakeInput ? false : !element.NeedsInputForDrag;
+                }
+                else if (element is IHudElementWithMouseOver elementWithMouseOver)
+                {
+                    elementWithMouseOver.StopMouseover();
+                }
             }
 
             // job hud
@@ -190,48 +204,6 @@ namespace DelvUI.Helpers
                 new Vector2(position.X + size.X / 2f - arrowSize.X / 2f + 2, position.Y - arrowSize.Y + 1),
                 new Vector2(position.X + size.X / 2f - arrowSize.X / 2f + 2, position.Y + size.Y - 7)
             };
-        }
-
-        public static void DrawGridWindow()
-        {
-            var configManager = ConfigurationManager.Instance;
-            var node = configManager.GetConfigPageNode<GridConfig>();
-            if (node == null)
-            {
-                return;
-            }
-
-            GridConfig config = (GridConfig)node.ConfigObject;
-
-            ImGui.SetNextWindowSize(new Vector2(340, 300), ImGuiCond.Appearing);
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(10f / 255f, 10f / 255f, 10f / 255f, 0.95f));
-
-            if (!ImGui.Begin("Grid", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoScrollWithMouse))
-            {
-                ImGui.End();
-                return;
-            }
-
-            ImGui.PushItemWidth(150);
-            var changed = false;
-            node.Draw(ref changed);
-
-            ImGui.SetCursorPos(new Vector2(8, 260));
-
-            if (ImGui.Button("Lock HUD", new Vector2(ImGui.GetWindowContentRegionWidth(), 30)))
-            {
-                changed = true;
-                config.Enabled = false;
-                configManager.LockHUD = true;
-            }
-
-            if (changed)
-            {
-                configManager.SaveConfigurations();
-            }
-
-            ImGui.End();
-            ImGui.PopStyleColor();
         }
     }
 }
