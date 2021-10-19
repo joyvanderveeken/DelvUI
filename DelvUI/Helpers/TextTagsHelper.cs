@@ -119,6 +119,8 @@ namespace DelvUI.Helpers
 
             ["[health:percent]"] = (currentHp, maxHp) => (100f * currentHp / Math.Max(1, maxHp)).ToString("N0"),
 
+            ["[health:percent-hidden]"] = (currentHp, maxHp) => (currentHp == (0 | maxHp) ? "" : $"{Math.Round(100f / maxHp * currentHp)}"),
+
             ["[health:percent-decimal]"] = (currentHp, maxHp) => FormattableString.Invariant($"{100f * currentHp / Math.Max(1f, maxHp):##0.#}"),
 
             ["[health:deficit]"] = (currentHp, maxHp) => currentHp == maxHp ? "0" : $"-{maxHp - currentHp}",
@@ -165,8 +167,12 @@ namespace DelvUI.Helpers
 
             ["[level]"] = (chara) => chara.Level.ToString(),
 
+            ["[level:hidden]"] = (chara) => chara.Level < 80 ? chara.Level.ToString() + " " : "",
+
             ["[job]"] = (chara) => JobsHelper.JobNames.TryGetValue(chara.ClassJob.Id, out var jobName) ? jobName : "",
-            #endregion
+
+            ["[job:long]"] = (chara) => JobsHelper.JobNamesLong.TryGetValue(chara.ClassJob.Id, out var jobNameLong) ? jobNameLong : "",
+            #endregion,
         };
 
         private static List<Dictionary<string, Func<uint, uint, string>>> NumericValuesTagMaps = new List<Dictionary<string, Func<uint, uint, string>>>()
