@@ -78,12 +78,12 @@ namespace DelvUI.Helpers
 
             if (t.Hours > 1)
             {
-                return t.Hours + "h";
+                return "";
             }
 
-            if (t.Minutes >= 5)
+            if (t.Minutes >= 10)
             {
-                return t.Minutes + "m";
+                return "";
             }
 
             if (t.Minutes >= 1)
