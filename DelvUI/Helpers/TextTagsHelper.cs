@@ -165,7 +165,7 @@ namespace DelvUI.Helpers
 
             ["[company]"] = (chara) => chara.CompanyTag.ToString(),
 
-            ["[level]"] = (chara) => chara.Level.ToString(),
+            ["[level]"] = (chara) => chara.Level > 0 ? chara.Level.ToString() : "-",
 
             ["[level:hidden]"] = (chara) => chara.Level < 80 ? chara.Level.ToString() + " " : "",
 
