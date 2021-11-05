@@ -435,7 +435,7 @@ namespace DelvUI.Interface.Party
         {
             return status switch
             {
-                PartyMemberStatus.ViewingCutscene => "[Viewing Cutscene]",
+                PartyMemberStatus.ViewingCutscene => "Viewing Cutscene",
                 _ => null
             };
         }
