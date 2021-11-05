@@ -3,6 +3,7 @@ using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Logging;
+using Dalamud.Memory;
 using DelvUI.Config;
 using DelvUI.Helpers;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -10,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using StructsFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 
 namespace DelvUI.Interface.Party
 {
@@ -84,15 +86,23 @@ namespace DelvUI.Interface.Party
         public AddonPartyList* PartyListAddon { get; private set; } = null;
         public IntPtr HudAgent { get; private set; } = IntPtr.Zero;
 
+        public RaptureAtkModule* RaptureAtkModule { get; private set; } = null;
+
         private const int PartyListInfoOffset = 0x0B50;
         private const int PartyListMemberRawInfoSize = 0x18;
         private const int PartyJobIconIdsOffset = 0x0F20;
 
         private const int PartyCrossWorldNameOffset = 0x0E52;
+        private const int PartyCrossWorldDisplayNameOffset = 0x0DEA;
         private const int PartyCrossWorldEntrySize = 0xD8;
 
+        private const int PartyTrustNameOffset = 0x0B68;
+        private const int PartyTrustEntrySize = 0x18;
+
+        private const int PartyMembersInfoIndex = 11;
+
         private List<PartyListMemberInfo> _partyMembersInfo = null!;
-        private bool _playerOrderChanged = false;
+        private bool _dirty = false;
 
         private List<IPartyFramesMember> _groupMembers = new List<IPartyFramesMember>();
         public IReadOnlyCollection<IPartyFramesMember> GroupMembers => _groupMembers.AsReadOnly();
@@ -110,6 +120,9 @@ namespace DelvUI.Interface.Party
             // find party list hud agent
             PartyListAddon = (AddonPartyList*)Plugin.GameGui.GetAddonByName("_PartyList", 1);
             HudAgent = Plugin.GameGui.FindAgentInterface(PartyListAddon);
+
+            UIModule* uiModule = StructsFramework.Instance()->GetUiModule();
+            RaptureAtkModule = uiModule != null ? uiModule->GetRaptureAtkModule() : null;
 
             // no need to update on preview mode
             if (_config.Preview)
@@ -132,6 +145,14 @@ namespace DelvUI.Interface.Party
 
             try
             {
+                // trust
+                if (PartyListAddon->TrustCount > 0)
+                {
+                    UpdateTrustParty(player, PartyListAddon->TrustCount);
+                    UpdateTrackers();
+                    return;
+                }
+
                 // solo
                 if (_realMemberCount <= 1)
                 {
@@ -145,9 +166,7 @@ namespace DelvUI.Interface.Party
                         MembersChangedEvent?.Invoke(this);
                     }
 
-                    _raiseTracker.Update(_groupMembers);
-                    _invulnTracker.Update(_groupMembers);
-                    _cleanseTracker.Update(_groupMembers);
+                    UpdateTrackers();
                     return;
                 }
 
@@ -160,7 +179,7 @@ namespace DelvUI.Interface.Party
                     foreach (var member in _groupMembers)
                     {
                         var index = member.ObjectId == player.ObjectId ? 0 : member.Order - 1;
-                        member.Update(EnmityForIndex(index), IsPartyLeader(index), JobIdForIndex(index));
+                        member.Update(EnmityForIndex(index), StatusForIndex(index), IsPartyLeader(index), JobIdForIndex(index));
                     }
                 }
                 // cross world party
@@ -174,13 +193,50 @@ namespace DelvUI.Interface.Party
                     UpdateRegularParty(player);
                 }
 
-                _raiseTracker.Update(_groupMembers);
-                _invulnTracker.Update(_groupMembers);
-                _cleanseTracker.Update(_groupMembers);
+                UpdateTrackers();
             }
-            catch (Exception e)
+            catch { }
+        }
+
+        private void UpdateTrustParty(PlayerCharacter player, int trustCount)
+        {
+            bool needsUpdate = _dirty || _groupMembers.Count != trustCount + 1;
+
+            if (needsUpdate)
             {
-                PluginLog.LogError("ERROR getting party data: " + e.Message);
+                _groupMembers.Clear();
+
+                int order = _config.PlayerOrderOverrideEnabled ? _config.PlayerOrder + 1 : 1;
+                _groupMembers.Add(new PartyFramesMember(player, order, EnmityForIndex(0), PartyMemberStatus.None, true));
+
+                order = 2;
+
+                for (int i = 0; i < trustCount; i++)
+                {
+                    long* namePtr = (long*)(HudAgent + (PartyTrustNameOffset + PartyTrustEntrySize * i));
+                    string? name = Marshal.PtrToStringUTF8(new IntPtr(*namePtr));
+                    if (name == null) { continue; }
+
+                    Character? trustChara = Utils.GetGameObjectByName(name) as Character;
+                    if (trustChara != null)
+                    {
+                        _groupMembers.Add(new PartyFramesMember(trustChara, order, EnmityForIndex(i + 1), PartyMemberStatus.None, true));
+                        order++;
+                    }
+                }
+
+                // sort
+                SortGroupMembers(player);
+                _dirty = false;
+
+                MembersChangedEvent?.Invoke(this);
+            }
+            else
+            {
+                for (int i = 0; i < _groupMembers.Count; i++)
+                {
+                    _groupMembers[i].Update(EnmityForIndex(i), PartyMemberStatus.None, i == 0, i == 0 ? player.ClassJob.Id : 0);
+                }
             }
         }
 
@@ -196,10 +252,12 @@ namespace DelvUI.Interface.Party
                 }
             }
 
-            bool needsUpdate = _groupMembers.Count == 0 ||
-                (_groupMembers.Count == 1 && _config.ShowChocobo) ||
+            bool needsUpdate =
+                _groupMembers.Count == 0 ||
+                (_groupMembers.Count != 2 && _config.ShowChocobo) ||
                 (_groupMembers.Count > 1 && !_config.ShowChocobo) ||
-                (_groupMembers.Count > 1 && chocobo == null);
+                (_groupMembers.Count > 1 && chocobo == null) ||
+                (_groupMembers.Count == 2 && _config.ShowChocobo && _groupMembers[1].ObjectId != chocobo?.ObjectId);
 
             EnmityLevel playerEnmity = PartyListAddon->EnmityLeaderIndex == 0 ? EnmityLevel.Leader : EnmityLevel.Last;
 
@@ -214,11 +272,11 @@ namespace DelvUI.Interface.Party
             {
                 _groupMembers.Clear();
 
-                _groupMembers.Add(new PartyFramesMember(player, 1, playerEnmity, true));
+                _groupMembers.Add(new PartyFramesMember(player, 1, playerEnmity, PartyMemberStatus.None, true));
 
                 if (chocobo != null)
                 {
-                    _groupMembers.Add(new PartyFramesMember(chocobo, 2, chocoboEnmity, false));
+                    _groupMembers.Add(new PartyFramesMember(chocobo, 2, chocoboEnmity, PartyMemberStatus.None, false));
                 }
 
                 MembersChangedEvent?.Invoke(this);
@@ -227,31 +285,60 @@ namespace DelvUI.Interface.Party
             {
                 for (int i = 0; i < _groupMembers.Count; i++)
                 {
-                    _groupMembers[i].Update(i == 0 ? playerEnmity : chocoboEnmity, i == 0, i == 0 ? player.ClassJob.Id : 0);
+                    _groupMembers[i].Update(i == 0 ? playerEnmity : chocoboEnmity, PartyMemberStatus.None, i == 0, i == 0 ? player.ClassJob.Id : 0);
                 }
             }
         }
 
         private bool ParseRawData()
         {
-            bool partyChanged = _playerOrderChanged || _partyMembersInfo == null || _groupMembers.Count != _realMemberCount;
+            if (HudAgent == IntPtr.Zero) { return false; }
 
-            if (HudAgent != IntPtr.Zero)
+            // player status
+            Dictionary<string, string> PlayerStatusMap = new Dictionary<string, string>();
+            if (RaptureAtkModule != null && RaptureAtkModule->AtkModule.AtkArrayDataHolder.StringArrayCount > PartyMembersInfoIndex)
             {
-                List<PartyListMemberInfo> newInfo = new List<PartyListMemberInfo>(_realMemberCount);
-
-                for (int i = 0; i < _realMemberCount; i++)
+                var stringArrayData = RaptureAtkModule->AtkModule.AtkArrayDataHolder.StringArrays[PartyMembersInfoIndex];
+                for (int i = 5; i < 40; i += 5)
                 {
-                    PartyListMemberRawInfo* info = (PartyListMemberRawInfo*)(HudAgent + (PartyListInfoOffset + PartyListMemberRawInfoSize * i));
-                    newInfo.Add(new PartyListMemberInfo(info, NameForIndex(i), JobIdForIndex(i)));
-                }
+                    if (stringArrayData->AtkArrayData.Size <= i + 3 || stringArrayData->StringArray[i] == null || stringArrayData->StringArray[i + 3] == null) { break; }
 
-                if (!partyChanged && _partyMembersInfo != null)
-                {
-                    partyChanged = !newInfo.SequenceEqual(_partyMembersInfo);
+                    IntPtr ptr = new IntPtr(stringArrayData->StringArray[i]);
+                    string name = MemoryHelper.ReadSeStringNullTerminated(ptr).ToString();
+
+                    ptr = new IntPtr(stringArrayData->StringArray[i + 3]);
+                    string status = MemoryHelper.ReadSeStringNullTerminated(ptr).ToString();
+
+                    if (!PlayerStatusMap.ContainsKey(name))
+                    {
+                        PlayerStatusMap.Add(name, status);
+                    }
                 }
-                _partyMembersInfo = newInfo;
             }
+
+            // party data
+            bool partyChanged = _dirty || _partyMembersInfo == null || _groupMembers.Count != _realMemberCount;
+
+            List<PartyListMemberInfo> newInfo = new List<PartyListMemberInfo>(_realMemberCount);
+            for (int i = 0; i < _realMemberCount; i++)
+            {
+                PartyListMemberRawInfo* info = (PartyListMemberRawInfo*)(HudAgent + (PartyListInfoOffset + PartyListMemberRawInfoSize * i));
+                string? name = NameForIndex(i);
+                string? status = null;
+
+                if (name != null)
+                {
+                    PlayerStatusMap.TryGetValue(name, out status);
+                }
+
+                newInfo.Add(new PartyListMemberInfo(info, name, JobIdForIndex(i), status));
+            }
+
+            if (!partyChanged && _partyMembersInfo != null)
+            {
+                partyChanged = !newInfo.SequenceEqual(_partyMembersInfo);
+            }
+            _partyMembersInfo = newInfo;
 
             return partyChanged;
         }
@@ -275,19 +362,20 @@ namespace DelvUI.Interface.Party
                     order = i + 1;
                 }
 
-                var enmity = EnmityForIndex(isPlayer ? 0 : order - 1);
+                var enmity = EnmityForIndex(i);
+                var status = StatusForIndex(i);
                 var isPartyLeader = IsPartyLeader(i);
 
                 var member = isPlayer ?
-                    new PartyFramesMember(player, order, enmity, isPartyLeader) :
-                    new PartyFramesMember(NameForIndex(i), order, JobIdForIndex(i), isPartyLeader);
+                    new PartyFramesMember(player, order, enmity, status, isPartyLeader) :
+                    new PartyFramesMember(NameForIndex(i), order, JobIdForIndex(i), status, isPartyLeader);
 
                 _groupMembers.Add(member);
             }
 
             // sort according to default party list
             SortGroupMembers(player);
-            _playerOrderChanged = false;
+            _dirty = false;
 
             // fire event
             MembersChangedEvent?.Invoke(this);
@@ -319,10 +407,12 @@ namespace DelvUI.Interface.Party
                     order = IndexForPartyMember(partyMember) ?? 9;
                 }
 
-                var enmity = EnmityForIndex(isPlayer ? 0 : order - 1);
-                var isPartyLeader = i == Plugin.PartyList.PartyLeaderIndex;
+                int index = isPlayer ? 0 : order - 1;
+                EnmityLevel enmity = EnmityForIndex(index);
+                PartyMemberStatus status = StatusForIndex(index);
+                bool isPartyLeader = i == Plugin.PartyList.PartyLeaderIndex;
 
-                var member = new PartyFramesMember(partyMember, order, enmity, isPartyLeader);
+                var member = new PartyFramesMember(partyMember, order, enmity, status, isPartyLeader);
                 _groupMembers.Add(member);
 
                 // player's chocobo (always last)
@@ -331,17 +421,24 @@ namespace DelvUI.Interface.Party
                     var companion = Utils.GetBattleChocobo(player);
                     if (companion is Character companionCharacter)
                     {
-                        _groupMembers.Add(new PartyFramesMember(companionCharacter, 10, EnmityLevel.Last, false));
+                        _groupMembers.Add(new PartyFramesMember(companionCharacter, 10, EnmityLevel.Last, PartyMemberStatus.None, false));
                     }
                 }
             }
 
             // sort according to default party list
             SortGroupMembers(player);
-            _playerOrderChanged = false;
+            _dirty = false;
 
             // fire event
             MembersChangedEvent?.Invoke(this);
+        }
+
+        private void UpdateTrackers()
+        {
+            _raiseTracker.Update(_groupMembers);
+            _invulnTracker.Update(_groupMembers);
+            _cleanseTracker.Update(_groupMembers);
         }
 
         #region utils
@@ -354,6 +451,44 @@ namespace DelvUI.Interface.Party
 
             IntPtr namePtr = (HudAgent + (PartyCrossWorldNameOffset + PartyCrossWorldEntrySize * index));
             return Marshal.PtrToStringUTF8(namePtr);
+        }
+
+        private string? DisplayNameForIndex(int index)
+        {
+            if (HudAgent == IntPtr.Zero || index < 0 || index > 7)
+            {
+                return null;
+            }
+
+            IntPtr namePtr = (HudAgent + (PartyCrossWorldDisplayNameOffset + PartyCrossWorldEntrySize * index));
+            return Marshal.PtrToStringUTF8(namePtr);
+        }
+
+        private PartyMemberStatus StatusForIndex(int index)
+        {
+            if (index < 0 || index > 7)
+            {
+                return PartyMemberStatus.None;
+            }
+
+            // TODO: support for other languages
+            // couldn't figure out another way of doing this sadly
+
+            // offline status
+            string status = _partyMembersInfo[index].Status;
+            if (status.Contains("Offline"))
+            {
+                return PartyMemberStatus.Offline;
+            }
+
+            // viewing cutscene status
+            string? displayName = DisplayNameForIndex(index);
+            if (displayName != null && displayName.Contains("Viewing Cutscene"))
+            {
+                return PartyMemberStatus.ViewingCutscene;
+            }
+
+            return PartyMemberStatus.None;
         }
 
         private uint JobIdForIndex(int index)
@@ -443,7 +578,7 @@ namespace DelvUI.Interface.Party
         {
             if (_config.PlayerOrderOverrideEnabled)
             {
-                _playerOrderChanged = true;
+                _dirty = true;
             }
         }
 
@@ -456,6 +591,10 @@ namespace DelvUI.Interface.Party
             else if (args.PropertyName == "PlayerOrder" || args.PropertyName == "PlayerOrderOverrideEnabled")
             {
                 OnPlayerOrderChange();
+            }
+            else if (args.PropertyName == "ShowChocobo")
+            {
+                _dirty = true;
             }
         }
 
@@ -475,10 +614,7 @@ namespace DelvUI.Interface.Party
             {
                 for (int i = 0; i < 8; i++)
                 {
-                    EnmityLevel enmityLevel = i <= 1 ? (EnmityLevel)i + 1 : EnmityLevel.Last;
-                    bool isPartyLeader = i == 0;
-
-                    _groupMembers.Add(new FakePartyFramesMember(i, enmityLevel, isPartyLeader));
+                    _groupMembers.Add(new FakePartyFramesMember(i));
                 }
             }
 
@@ -494,13 +630,15 @@ namespace DelvUI.Interface.Party
             public readonly uint ObjectId;
             public readonly byte Type;
             public readonly uint JobId;
+            public readonly string Status;
 
-            public PartyListMemberInfo(PartyListMemberRawInfo* info, string? crossWorldName, uint jobId)
+            public PartyListMemberInfo(PartyListMemberRawInfo* info, string? crossWorldName, uint jobId, string? status)
             {
                 Name = crossWorldName ?? (Marshal.PtrToStringUTF8(new IntPtr(info->NamePtr)) ?? "");
                 ObjectId = info->ObjectId;
                 Type = info->Type;
                 JobId = jobId;
+                Status = status ?? "";
             }
 
             public bool Equals(PartyListMemberInfo? other)

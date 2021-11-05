@@ -21,12 +21,14 @@ using ImGuiScene;
 using System;
 using System.IO;
 using System.Reflection;
+using Dalamud.Game.ClientState.Buddy;
 using SigScanner = Dalamud.Game.SigScanner;
 
 namespace DelvUI
 {
     public class Plugin : IDalamudPlugin
     {
+        public static BuddyList BuddyList { get; private set; } = null!;
         public static ClientState ClientState { get; private set; } = null!;
         public static CommandManager CommandManager { get; private set; } = null!;
         public static Condition Condition { get; private set; } = null!;
@@ -52,6 +54,7 @@ namespace DelvUI
         private SystemMenuHook _menuHook = null!;
 
         public Plugin(
+            BuddyList buddyList,
             ClientState clientState,
             CommandManager commandManager,
             Condition condition,
@@ -66,6 +69,7 @@ namespace DelvUI
             TargetManager targetManager
         )
         {
+            BuddyList = buddyList;
             ClientState = clientState;
             CommandManager = commandManager;
             Condition = condition;
@@ -89,13 +93,16 @@ namespace DelvUI
                 AssemblyLocation = Assembly.GetExecutingAssembly().Location;
             }
 
-            Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.3.2.0";
+            Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.5.0.1";
 
             FontsManager.Initialize(AssemblyLocation);
             LoadBanner();
 
             // initialize a not-necessarily-defaults configuration
             ConfigurationManager.Initialize();
+            ProfilesManager.Initialize();
+            ConfigurationManager.Instance.LoadOrInitializeFiles();
+
             FontsManager.Instance.LoadConfig();
 
             _menuHook = new SystemMenuHook(PluginInterface);
@@ -106,7 +113,6 @@ namespace DelvUI
             LimitBreakHelper.Initialize();
             InputsHelper.Initialize();
             PartyManager.Initialize();
-            ProfilesManager.Initialize();
             PullTimerHelper.Initialize();
             TextTagsHelper.Initialize();
             TexturesCache.Initialize();
@@ -212,6 +218,17 @@ namespace DelvUI
                         }
                         break;
 
+                    case { } argument when argument.StartsWith("profile"):
+                        // TODO: Turn this into a helper function?
+                        var profile = argument.Split(" ", 2);
+
+                        if (profile.Length > 0)
+                        {
+                            ProfilesManager.Instance.CheckUpdateSwitchCurrentProfile(profile[1]);
+                        }
+
+                        break;
+
                     default:
                         configManager.ToggleConfigWindow();
 
@@ -265,6 +282,7 @@ namespace DelvUI
             _menuHook.Dispose();
             _hudManager.Dispose();
 
+            ConfigurationManager.Instance.SaveConfigurations(true);
             ConfigurationManager.Instance.CloseConfigWindow();
 
             CommandManager.RemoveHandler("/delvui");

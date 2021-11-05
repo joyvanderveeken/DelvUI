@@ -1,3 +1,74 @@
+# 0.5.0.1
+- Fixed castbars not drawing properly when anchored to unit frames.
+
+# 0.5.0.0
+Features:
+- Added Enemy List hud.
+- Added more border options for bars.
+- Added tank stance indicator for the player's unit frame.
+- Added "Offline Status" tracking for party frames.
+- Added window clipping settings. These settings are targetted for people that are experiencing performance issues or crashes. Until we find a definitive solution, disabling window clipping might help with these issues.
+- Added "Start Angle" and "Counter Clock Wise Rotation" settings for the circular GCD Indicator.
+- Added GCD Threshold to GCD Indicator.
+- Added sub-options to "Hide only JobPack HUD outside of combat" to always show in duties and/or when weapons are drawn.
+- Implement new tag `[time-till-max-gp]`, this will show you the time until your GP hits max again.
+- Added Raise Tracker and Invuln Tracker to the party frames preview mode.
+- Added more settings for all castbars.
+- Added "Show Source Name" to status tooltips.
+- Added option to show pet effects as your own status.
+
+Fixes: 
+- Fixed Bard's Soul Voice threshold not working.
+- Fixed settings not saving in some situations.
+- Fixed Death Indicator color showing for players that are not reachable instead of Out of Range color.
+- Fixed some more game windows not covering DelvUI elements
+- Fixed losing the original positions of the game's default cast bar and job gauges when using the DelvUI hide options for them and also using multiple HUD layouts.
+
+# 0.4.0.2
+Fixes:
+- Fixed some game windows not covering DelvUI elements.
+- Fixed mouseover getting "stuck" with automatic mode turned off.
+
+# 0.4.0.1
+Features:
+- Added a command to switch profiles: `/delvui profile ProfileName`, no quotation marks needed.
+- Partial Fill Color is now used for bars when Show In Chunks is unchecked
+
+Fixes:
+- Fixed BLU Job Specific Bar config not saving and only showing when actually on the BLU job.
+- Fixed AST cards not working with mouseover.
+- Fixed party frames not updating properly in some cases when showing chocobo.
+
+# 0.4.0.0
+Features:
+- Added "Player Status" tracking for party frames. Currently only "Viewing Cutscene" is supported.
+- Added role color setting to unit frames.
+- Added role/job icon to unit frames.
+- Added role color settings for DPS types (melee / ranged / caster).
+- Added setting to hide health related labels when appropiate in unit frames.
+- Added a number format setting for labels in job specific bars.
+- Added thickness settings for party frames healthbars borders.
+- Added support for Trust and Squadron Command parties.
+- Added Enable Combat Hotbars sub-option to use with Cross Hotbar instead.
+- Added option to change background color and opacity of the Castbars.
+- Added an option to display mana bar for jobs with raise (in addition to healers) in party frames.
+- Added basic BLU implementation. Only supports tracking of DPS skills so far.
+
+Fixes:
+- Fixed unit and party frames not being interactable when using XivAlexander.
+- Fixed some offensive spells not working when the cursor is on top of a player frame with mouseover in automatic mode, but the target is valid (ie GNB's Continuation or SMN's Egi Assault).
+- Fixed some bars not displaying the remaining duration properly.
+- Fixed delay with DRG Disembowel bar.
+- Fixed DRG Disembowel bar hiding itself for a second when re-applying buff with "Hide When Inactive" option checked.
+- Fixed "invisible" buffs.
+- Fixed status whitelists/blacklists not working properly if the imported profile was created with a different game language.
+- Fixed chocobo icon not showing in party frames.
+- Fixed unit frame colors being incorrect for NPCs in some situations.
+- Fixed castbar progress not being accurate when showing the ability icon.
+- Fixed castbar's slidecast default value.
+- Fixed game being frozen when importing or exporting profiles to .delvui files.
+- Fixed right click sometimes not working on party frames.
+
 # 0.3.2.0
 Features:
 - You can now attach HUD Layouts to be loaded alongside profiles.

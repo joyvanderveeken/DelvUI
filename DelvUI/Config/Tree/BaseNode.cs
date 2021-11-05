@@ -43,6 +43,14 @@ namespace DelvUI.Config.Tree
             return pageNode != null ? (T)pageNode.ConfigObject : null;
         }
 
+        public void RemoveConfigObject<T>() where T : PluginConfigObject
+        {
+            if (_configPageNodesMap.ContainsKey(typeof(T)))
+            {
+                _configPageNodesMap.Remove(typeof(T));
+            }
+        }
+
         public ConfigPageNode? GetConfigPageNode<T>() where T : PluginConfigObject
         {
             if (_configPageNodesMap.TryGetValue(typeof(T), out var node))
@@ -72,12 +80,15 @@ namespace DelvUI.Config.Tree
             _configPageNodesMap[configPageNode.ConfigObject.GetType()] = configPageNode;
         }
 
-        public void SetConfigObject(PluginConfigObject configObject)
+        public bool SetConfigObject(PluginConfigObject configObject)
         {
             if (_configPageNodesMap.TryGetValue(configObject.GetType(), out ConfigPageNode? configPageNode))
             {
                 configPageNode.ConfigObject = configObject;
+                return true;
             }
+
+            return false;
         }
 
         private void PushStyles()
@@ -222,7 +233,7 @@ namespace DelvUI.Config.Tree
                 ImGui.SetCursorPosX(0);
 
                 ImGui.PushStyleColor(ImGuiCol.Border, Vector4.Zero);
-                ImGui.BeginChild("buttons", new Vector2(1200, 0), true, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
+                ImGui.BeginChild("DelvUI_Settings_Buttons", new Vector2(1200, 0), true, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
                 ImGui.PopStyleColor();
 
                 const float buttonWidth = 150;
@@ -243,10 +254,22 @@ namespace DelvUI.Config.Tree
                 ImGui.PopStyleVar();
 
                 ImGui.SameLine();
-                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 251);
+                ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 93);
                 if (ImGui.Button($"Changelog", new Vector2(buttonWidth, 0)))
                 {
                     ConfigurationManager.Instance.OpenChangelogWindow();
+                }
+
+                ImGui.SameLine();
+
+                if (ImGui.Button("Browse Presets", new Vector2(buttonWidth, 0)))
+                {
+                    Utils.OpenUrl("https://wago.io/delvui");
+                }
+
+                if (ImGui.IsItemHovered())
+                {
+                    ImGui.SetTooltip("Find premade profiles on Wago.io!");
                 }
 
                 ImGui.PopStyleColor();
@@ -255,7 +278,7 @@ namespace DelvUI.Config.Tree
                 ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(114f / 255f, 137f / 255f, 218f / 255f, alpha));
                 ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(114f / 255f, 137f / 255f, 218f / 255f, alpha * .85f));
 
-                if (ImGui.Button("Help!", new Vector2(buttonWidth, 0)))
+                if (ImGui.Button("Discord", new Vector2(buttonWidth, 0)))
                 {
                     Utils.OpenUrl("https://discord.gg/delvui");
                 }
@@ -315,13 +338,15 @@ namespace DelvUI.Config.Tree
 
                     SectionNode newNode = new();
                     newNode.Name = sectionAttribute.SectionName;
+                    newNode.ForceAllowExport = sectionAttribute.ForceAllowExport;
                     _children.Add(newNode);
 
                     return newNode.GetOrAddConfig<T>();
                 }
             }
 
-            throw new ArgumentException("The provided configuration object does not specify a section");
+            Type type = typeof(T);
+            throw new ArgumentException("The provided configuration object does not specify a section: " + type.Name);
         }
     }
 }

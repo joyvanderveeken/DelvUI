@@ -2,6 +2,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface;
 using DelvUI.Config;
 using DelvUI.Helpers;
+using DelvUI.Interface.EnemyList;
 using DelvUI.Interface.GeneralElements;
 using DelvUI.Interface.Jobs;
 using DelvUI.Interface.Party;
@@ -36,7 +37,6 @@ namespace DelvUI.Interface
         private CustomEffectsListHud _customEffectsHud = null!;
         private PrimaryResourceHud _playerManaBarHud = null!;
         private JobHud? _jobHud = null;
-        private PartyFramesHud _partyFramesHud = null!;
 
         private Dictionary<uint, JobHudTypes> _jobsMap = null!;
         private Dictionary<uint, Type> _unsupportedJobsMap = null!;
@@ -165,7 +165,7 @@ namespace DelvUI.Interface
         private void CreateUnitFrames()
         {
             var playerUnitFrameConfig = ConfigurationManager.Instance.GetConfigObject<PlayerUnitFrameConfig>();
-            _playerUnitFrameHud = new UnitFrameHud(playerUnitFrameConfig, "Player");
+            _playerUnitFrameHud = new PlayerUnitFrameHud(playerUnitFrameConfig, "Player");
             _hudElements.Add(_playerUnitFrameHud);
             _hudElementsUsingPlayer.Add(_playerUnitFrameHud);
 
@@ -185,9 +185,14 @@ namespace DelvUI.Interface
             _hudElementsUsingFocusTarget.Add(_focusTargetUnitFrameHud);
 
             var partyFramesConfig = ConfigurationManager.Instance.GetConfigObject<PartyFramesConfig>();
-            _partyFramesHud = new PartyFramesHud(partyFramesConfig, "Party Frames");
-            _hudElements.Add(_partyFramesHud);
-            _hudElementsWithPreview.Add(_partyFramesHud);
+            var partyFramesHud = new PartyFramesHud(partyFramesConfig, "Party Frames");
+            _hudElements.Add(partyFramesHud);
+            _hudElementsWithPreview.Add(partyFramesHud);
+
+            var enemyListConfig = ConfigurationManager.Instance.GetConfigObject<EnemyListConfig>();
+            var enemyListHud = new EnemyListHud(enemyListConfig, "Enemy List");
+            _hudElements.Add(enemyListHud);
+            _hudElementsWithPreview.Add(enemyListHud);
         }
 
         private void CreateManaBars()
@@ -361,6 +366,7 @@ namespace DelvUI.Interface
               | ImGuiWindowFlags.NoBackground
               | ImGuiWindowFlags.NoInputs
               | ImGuiWindowFlags.NoBringToFrontOnFocus
+              | ImGuiWindowFlags.NoSavedSettings
             );
 
             if (!begin)
@@ -405,7 +411,10 @@ namespace DelvUI.Interface
             }
 
             // draw elements
-            DraggablesHelper.DrawElements(origin, _hudHelper, _hudElements, _jobHud, _selectedElement);
+            lock (_hudElements)
+            {
+                DraggablesHelper.DrawElements(origin, _hudHelper, _hudElements, _jobHud, _selectedElement);
+            }
 
             // tooltip
             TooltipsHelper.Instance.Draw();
@@ -576,13 +585,12 @@ namespace DelvUI.Interface
                 // casters
                 [JobIDs.BLM] = new JobHudTypes(typeof(BlackMageHud), typeof(BlackMageConfig), "Black Mage HUD"),
                 [JobIDs.SMN] = new JobHudTypes(typeof(SummonerHud), typeof(SummonerConfig), "Summoner HUD"),
-                [JobIDs.RDM] = new JobHudTypes(typeof(RedMageHud), typeof(RedMageConfig), "Red Mage HUD")
+                [JobIDs.RDM] = new JobHudTypes(typeof(RedMageHud), typeof(RedMageConfig), "Red Mage HUD"),
+                [JobIDs.BLU] = new JobHudTypes(typeof(BlueMageHud), typeof(BlueMageConfig), "Blue Mage HUD")
             };
 
             _unsupportedJobsMap = new Dictionary<uint, Type>()
             {
-                [JobIDs.BLU] = typeof(BlueMageConfig),
-
                 // base jobs
                 [JobIDs.GLD] = typeof(GladiatorConfig),
                 [JobIDs.MRD] = typeof(MarauderConfig),

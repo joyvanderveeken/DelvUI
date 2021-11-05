@@ -8,6 +8,7 @@ using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
@@ -52,7 +53,7 @@ namespace DelvUI.Interface.GeneralElements
         {
             if (_wasHovering)
             {
-                InputsHelper.Instance.Target = null;
+                InputsHelper.Instance.ClearTarget();
                 _wasHovering = false;
             }
         }
@@ -64,6 +65,8 @@ namespace DelvUI.Interface.GeneralElements
                 StopMouseover();
                 return;
             }
+
+            DrawExtras(origin, Actor);
 
             if (Actor is Character character)
             {
@@ -78,7 +81,7 @@ namespace DelvUI.Interface.GeneralElements
             var startPos = Utils.GetAnchoredPosition(origin + Config.Position, Config.Size, Config.Anchor);
             if (ImGui.IsMouseHoveringRect(startPos, startPos + Config.Size) && !DraggingEnabled)
             {
-                InputsHelper.Instance.Target = Actor;
+                InputsHelper.Instance.SetTarget(Actor);
                 _wasHovering = true;
 
                 if (InputsHelper.Instance.LeftButtonClicked)
@@ -93,9 +96,14 @@ namespace DelvUI.Interface.GeneralElements
             }
             else if (_wasHovering)
             {
-                InputsHelper.Instance.Target = null;
+                InputsHelper.Instance.ClearTarget();
                 _wasHovering = false;
             }
+        }
+
+        protected virtual void DrawExtras(Vector2 origin, GameObject? actor)
+        {
+            // override
         }
 
         private void DrawCharacter(Vector2 pos, Character character)
@@ -108,22 +116,19 @@ namespace DelvUI.Interface.GeneralElements
                 currentHp = _smoothHPHelper.GetNextHp((int)currentHp, (int)maxHp, Config.SmoothHealthConfig.Velocity);
             }
 
-            PluginConfigColor fillColor = Config.UseJobColor ? Utils.ColorForActor(character) : Config.FillColor;
+            PluginConfigColor fillColor = GetColor(character, currentHp, maxHp);
+            Rect background = new Rect(Config.Position, Config.Size, BackgroundColor(character));
+            Rect healthFill = BarUtilities.GetFillRect(Config.Position, Config.Size, Config.FillDirection, fillColor, currentHp, maxHp);
 
-            if (Config.UseColorBasedOnHealthValue)
-            {
-                var scale = (float)currentHp / Math.Max(1, maxHp);
-                fillColor = Utils.GetColorByScale(scale, Config.LowHealthColorThreshold / 100f, Config.FullHealthColorThreshold / 100f, Config.LowHealthColor, Config.FullHealthColor, Config.blendMode);
-            }
-
-            var background = new Rect(Config.Position, Config.Size, BackgroundColor(character));
-            var healthFill = BarUtilities.GetFillRect(Config.Position, Config.Size, Config.FillDirection, fillColor, currentHp, maxHp);
-            var bar = new BarHud(Config, character).SetBackground(background).AddForegrounds(healthFill).AddLabels(Config.LeftLabelConfig, Config.RightLabelConfig);
+            BarHud bar = new BarHud(Config, character);
+            bar.SetBackground(background);
+            bar.AddForegrounds(healthFill);
+            bar.AddLabels(GetLabels(maxHp));
 
             if (Config.UseMissingHealthBar)
             {
-                var healthMissingSize = Config.Size - BarUtilities.GetFillDirectionOffset(healthFill.Size, Config.FillDirection);
-                var healthMissingPos = Config.FillDirection.IsInverted() ? Config.Position : Config.Position + BarUtilities.GetFillDirectionOffset(healthFill.Size, Config.FillDirection);
+                Vector2 healthMissingSize = Config.Size - BarUtilities.GetFillDirectionOffset(healthFill.Size, Config.FillDirection);
+                Vector2 healthMissingPos = Config.FillDirection.IsInverted() ? Config.Position : Config.Position + BarUtilities.GetFillDirectionOffset(healthFill.Size, Config.FillDirection);
                 PluginConfigColor? color = Config.UseDeathIndicatorBackgroundColor && character.CurrentHp <= 0 ? Config.DeathIndicatorBackgroundColor : Config.HealthMissingColor;
                 bar.AddForegrounds(new Rect(healthMissingPos, healthMissingSize, color));
             }
@@ -148,13 +153,89 @@ namespace DelvUI.Interface.GeneralElements
             }
 
             bar.Draw(pos);
+
+            // role/job icon
+            if (Config.RoleIconConfig.Enabled && character is PlayerCharacter)
+            {
+                uint jobId = character.ClassJob.Id;
+                uint iconId = Config.RoleIconConfig.UseRoleIcons ?
+                        JobsHelper.RoleIconIDForJob(jobId, Config.RoleIconConfig.UseSpecificDPSRoleIcons) :
+                        JobsHelper.IconIDForJob(jobId) + (uint)Config.RoleIconConfig.Style * 100;
+
+                if (iconId > 0)
+                {
+                    var barPos = Utils.GetAnchoredPosition(pos, Config.Size, Config.Anchor);
+                    var parentPos = Utils.GetAnchoredPosition(barPos + Config.Position, -Config.Size, Config.RoleIconConfig.FrameAnchor);
+                    var iconPos = Utils.GetAnchoredPosition(parentPos + Config.RoleIconConfig.Position, Config.RoleIconConfig.Size, Config.RoleIconConfig.Anchor);
+
+                    DrawHelper.DrawInWindow(ID + "_jobIcon", iconPos, Config.RoleIconConfig.Size, false, false, (drawList) =>
+                    {
+                        DrawHelper.DrawIcon(iconId, iconPos, Config.RoleIconConfig.Size, false, drawList);
+                    });
+                }
+            }
+        }
+
+        private LabelConfig[] GetLabels(uint maxHp)
+        {
+            List<LabelConfig> labels = new List<LabelConfig>();
+
+            if (Config.HideHealthIfPossible)
+            {
+                bool isHealthLabel = IsHealthLabel(Config.LeftLabelConfig);
+                if (!isHealthLabel || maxHp > 0)
+                {
+                    labels.Add(Config.LeftLabelConfig);
+                }
+
+                isHealthLabel = IsHealthLabel(Config.RightLabelConfig);
+                if (!isHealthLabel || maxHp > 0)
+                {
+                    labels.Add(Config.RightLabelConfig);
+                }
+            }
+            else
+            {
+                labels.Add(Config.LeftLabelConfig);
+                labels.Add(Config.RightLabelConfig);
+            }
+
+            return labels.ToArray();
+        }
+
+        private bool IsHealthLabel(LabelConfig config)
+        {
+            return config.GetText().Contains("[health");
+        }
+
+        private PluginConfigColor GetColor(GameObject? actor, uint currentHp = 0, uint maxHp = 0)
+        {
+            Character? character = actor as Character;
+
+            if (Config.UseJobColor && character != null)
+            {
+                return Utils.ColorForActor(character);
+            }
+            else if (Config.UseRoleColor)
+            {
+                return character is PlayerCharacter ?
+                    GlobalColors.Instance.SafeRoleColorForJobId(character.ClassJob.Id) :
+                    Utils.ColorForActor(character);
+            }
+            else if (Config.ColorByHealth.Enabled && character != null)
+            {
+                var scale = (float)currentHp / Math.Max(1, maxHp);
+                return Utils.GetColorByScale(scale, Config.ColorByHealth);
+            }
+
+            return Config.FillColor;
         }
 
         private void DrawFriendlyNPC(Vector2 pos, GameObject? actor)
         {
             var bar = new BarHud(Config, actor);
-            bar.AddForegrounds(new Rect(Config.Position, Config.Size, Config.UseJobColor ? GlobalColors.Instance.NPCFriendlyColor : Config.FillColor));
-            bar.AddLabels(Config.LeftLabelConfig, Config.RightLabelConfig);
+            bar.AddForegrounds(new Rect(Config.Position, Config.Size, GetColor(actor)));
+            bar.AddLabels(GetLabels(0));
             bar.Draw(pos);
         }
 
@@ -205,5 +286,118 @@ namespace DelvUI.Interface.GeneralElements
         }
 
         private delegate void OpenContextMenuFromTarget(IntPtr agentHud, IntPtr gameObject);
+    }
+
+    public class PlayerUnitFrameHud : UnitFrameHud
+    {
+        public new PlayerUnitFrameConfig Config => (PlayerUnitFrameConfig)_config;
+
+        public PlayerUnitFrameHud(PlayerUnitFrameConfig config, string displayName) : base(config, displayName)
+        {
+
+        }
+
+        protected override void DrawExtras(Vector2 origin, GameObject? actor)
+        {
+            TankStanceIndicatorConfig config = Config.TankStanceIndicatorConfig;
+
+            if (!config.Enabled || actor is not PlayerCharacter chara) { return; }
+
+            uint jobId = chara.ClassJob.Id;
+            if (JobsHelper.RoleForJob(jobId) != JobRoles.Tank) { return; }
+
+            var tankStanceBuff = chara.StatusList.Where(o =>
+                o.StatusId == 79 || // IRON WILL
+                o.StatusId == 91 || // DEFIANCE
+                o.StatusId == 392 || // ROYAL GUARD
+                o.StatusId == 393 || // IRON WILL
+                o.StatusId == 743 || // GRIT
+                o.StatusId == 1396 || // DEFIANCE
+                o.StatusId == 1397 || // GRIT
+                o.StatusId == 1833    // ROYAL GUARD
+            );
+
+            PluginConfigColor color = tankStanceBuff.Any() ? config.ActiveColor : config.InactiveColor;
+
+            Vector2 pos = GetTankStanceCornerOrigin(origin);
+            var (verticalDir, horizontalDir) = GetTankStanceLinesDirections();
+
+            pos = new Vector2(pos.X + config.Thickess * -horizontalDir, pos.Y + config.Thickess * -verticalDir);
+            Vector2 vSize = new Vector2(config.Thickess * horizontalDir, (config.Size.Y + config.Thickess) * verticalDir);
+            Vector2 vEndPos = pos + vSize;
+            Vector2 hSize = new Vector2((config.Size.X + config.Thickess) * horizontalDir, config.Thickess * verticalDir);
+            Vector2 hEndPos = pos + hSize;
+
+            Vector2 startPos = new Vector2(Math.Min(pos.X, hEndPos.X), Math.Min(pos.Y, hEndPos.Y));
+            Vector2 endPos = new Vector2(Math.Max(pos.X, hEndPos.X), Math.Max(pos.Y, hEndPos.Y)); ;
+
+            DrawHelper.DrawInWindow(ID + "_TankStance", startPos, endPos - startPos, false, false, (drawList) =>
+            {
+                // TODO: clean up hacky math 
+                // there's some 1px errors prob due to negative sizes
+                // couldn't figure it out so I did the hacky fixes
+
+                // vertical
+                drawList.AddRectFilled(pos, vEndPos, color.Base);
+
+                if (config.Corner == TankStanceCorner.TopRight)
+                {
+                    drawList.AddLine(pos, pos + new Vector2(0, vSize.Y + 1), 0xFF000000);
+                }
+                else
+                {
+                    drawList.AddLine(pos, pos + new Vector2(0, vSize.Y), 0xFF000000);
+                }
+
+                drawList.AddLine(pos + vSize, pos + vSize + new Vector2(-vSize.X, 0), 0xFF000000);
+
+                // horizontal
+                drawList.AddRectFilled(pos, hEndPos, color.Base);
+
+                if (config.Corner == TankStanceCorner.BottomLeft)
+                {
+                    drawList.AddLine(pos, pos + new Vector2(hSize.X + 1, 0), 0xFF000000);
+                }
+                else
+                {
+                    drawList.AddLine(pos, pos + new Vector2(hSize.X, 0), 0xFF000000);
+                }
+
+                if (config.Corner == TankStanceCorner.BottomRight)
+                {
+                    drawList.AddLine(pos + new Vector2(0, 1), pos + new Vector2(0, hSize.Y), 0xFF000000);
+                }
+                else
+                {
+                    drawList.AddLine(pos, pos + new Vector2(0, hSize.Y), 0xFF000000);
+                }
+
+                drawList.AddLine(pos + hSize, pos + hSize + new Vector2(0, -hSize.Y), 0xFF000000);
+            });
+        }
+
+        private Vector2 GetTankStanceCornerOrigin(Vector2 origin)
+        {
+            var topLeft = Utils.GetAnchoredPosition(origin + Config.Position, Config.Size, Config.Anchor);
+
+            return Config.TankStanceIndicatorConfig.Corner switch
+            {
+                TankStanceCorner.TopRight => topLeft + new Vector2(Config.Size.X - 1, 0),
+                TankStanceCorner.BottomLeft => topLeft + new Vector2(0, Config.Size.Y - 1),
+                TankStanceCorner.BottomRight => topLeft + Config.Size - Vector2.One,
+                _ => topLeft
+            };
+        }
+
+        private (int, int) GetTankStanceLinesDirections()
+        {
+            return Config.TankStanceIndicatorConfig.Corner switch
+            {
+                TankStanceCorner.TopLeft => (1, 1),
+                TankStanceCorner.TopRight => (1, -1),
+                TankStanceCorner.BottomLeft => (-1, 1),
+                _ => (-1, -1)
+            };
+        }
     }
 }

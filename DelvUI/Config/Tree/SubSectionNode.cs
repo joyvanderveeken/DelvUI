@@ -27,10 +27,10 @@ namespace DelvUI.Config.Tree
             if (_children.Count > 1)
             {
                 ImGui.BeginChild(
-                    "item" + Depth + " view",
+                    "DelvUI_Tabs_" + Depth,
                     new Vector2(0, ImGui.GetWindowHeight() - 22),
                     false,
-                    ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse
+                    ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse
                 ); // Leave room for 1 line below us
 
                 if (ImGui.BeginTabBar("##tabs" + Depth, ImGuiTabBarFlags.None))
@@ -94,11 +94,11 @@ namespace DelvUI.Config.Tree
             }
         }
 
-        public override void Load(string path)
+        public override void Load(string path, string currentVersion, string? previousVersion = null)
         {
             foreach (SubSectionNode child in _children)
             {
-                child.Load(Path.Combine(path, Name));
+                child.Load(Path.Combine(path, Name), currentVersion, previousVersion);
             }
         }
 
