@@ -172,6 +172,8 @@ namespace DelvUI.Helpers
             ["[job]"] = (chara) => JobsHelper.JobNames.TryGetValue(chara.ClassJob.Id, out var jobName) ? jobName : "",
 
             ["[job:long]"] = (chara) => JobsHelper.JobNamesLong.TryGetValue(chara.ClassJob.Id, out var jobNameLong) ? jobNameLong : "",
+            
+            ["[time-till-max-gp]"] = JobsHelper.TimeTillMaxGP,
             #endregion,
         };
 
