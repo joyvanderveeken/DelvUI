@@ -38,7 +38,7 @@ namespace DelvUI.Interface.GeneralElements
         public bool SupportChineseCharacters = false;
         public bool SupportKoreanCharacters = false;
 
-        [JsonIgnore] public static readonly List<string> DefaultFontsKeys = new List<string>() { "big-noodle-too_24", "big-noodle-too_20", "big-noodle-too_16" };
+        [JsonIgnore] public static readonly List<string> DefaultFontsKeys = new List<string>() { "Expressway_24", "Expressway_20", "Expressway_16", "AXIS_24", "AXIS_20", "AXIS_16" };
         [JsonIgnore] public static string DefaultBigFontKey => DefaultFontsKeys[0];
         [JsonIgnore] public static string DefaultMediumFontKey => DefaultFontsKeys[1];
         [JsonIgnore] public static string DefaultSmallFontKey => DefaultFontsKeys[2];
@@ -184,7 +184,7 @@ namespace DelvUI.Interface.GeneralElements
                 if (_fonts.Length == 0)
                 {
                     ImGuiHelper.Tab();
-                    ImGui.Text("Default font not found in \"%appdata%/Roaming/XIVLauncher/InstalledPlugins/DelvUI/Media/Fonts/big-noodle-too.ttf\"");
+                    ImGui.Text("Default font not found in \"%appdata%/Roaming/XIVLauncher/InstalledPlugins/DelvUI/Media/Fonts/Expressway.ttf\"");
                     return false;
                 }
 

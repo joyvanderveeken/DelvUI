@@ -205,37 +205,37 @@ namespace DelvUI.Interface.Jobs
             {
                 case CardType.BALANCE:
                     cardColor = Config.AstrodyneBar.SealSunColor;
-                    cardJob = "MELEE";
+                    cardJob = "Melee";
                     Config.DrawBar.DrawGlowConfig.Color = new PluginConfigColor(Config.DrawBar.DrawMeleeGlowColor.Vector);
                     break;
 
                 case CardType.BOLE:
                     cardColor = Config.AstrodyneBar.SealSunColor;
-                    cardJob = "RANGED";
+                    cardJob = "Ranged";
                     Config.DrawBar.DrawGlowConfig.Color = new PluginConfigColor(Config.DrawBar.DrawRangedGlowColor.Vector);
                     break;
 
                 case CardType.ARROW:
                     cardColor = Config.AstrodyneBar.SealLunarColor;
-                    cardJob = "MELEE";
+                    cardJob = "Melee";
                     Config.DrawBar.DrawGlowConfig.Color = new PluginConfigColor(Config.DrawBar.DrawMeleeGlowColor.Vector);
                     break;
 
                 case CardType.EWER:
                     cardColor = Config.AstrodyneBar.SealLunarColor;
-                    cardJob = "RANGED";
+                    cardJob = "Ranged";
                     Config.DrawBar.DrawGlowConfig.Color = new PluginConfigColor(Config.DrawBar.DrawRangedGlowColor.Vector);
                     break;
 
                 case CardType.SPEAR:
                     cardColor = Config.AstrodyneBar.SealCelestialColor;
-                    cardJob = "MELEE";
+                    cardJob = "Melee";
                     Config.DrawBar.DrawGlowConfig.Color = new PluginConfigColor(Config.DrawBar.DrawMeleeGlowColor.Vector);
                     break;
 
                 case CardType.SPIRE:
                     cardColor = Config.AstrodyneBar.SealCelestialColor;
-                    cardJob = "RANGED";
+                    cardJob = "Ranged";
                     Config.DrawBar.DrawGlowConfig.Color = new PluginConfigColor(Config.DrawBar.DrawRangedGlowColor.Vector);
                     break;
 
@@ -262,14 +262,14 @@ namespace DelvUI.Interface.Jobs
                     {
                         Config.DrawBar.DrawDrawLabel.SetValue(current);
                     }
-                    else if (drawCastInfo > 0 && drawCharges > 0)
-                    {
-                        Config.DrawBar.DrawDrawLabel.SetText("READY (" + current.ToString("0") + ")");
-                    }
-                    else
-                    {
-                        Config.DrawBar.DrawDrawLabel.SetText("READY");
-                    }
+                    // else if (drawCastInfo > 0 && drawCharges > 0)
+                    // {
+                    //     Config.DrawBar.DrawDrawLabel.SetText("READY (" + current.ToString("0") + ")");
+                    // }
+                    // else
+                    // {
+                    //     Config.DrawBar.DrawDrawLabel.SetText("READY");
+                    // }
                 }
                 else
                 {
@@ -284,14 +284,14 @@ namespace DelvUI.Interface.Jobs
                 {
                     Config.DrawBar.Label.SetValue(current);
                 }
-                else if (drawCastInfo > 0 && drawCharges > 0)
-                {
-                    Config.DrawBar.Label.SetText("READY (" + current.ToString("0") + ")");
-                }
-                else
-                {
-                    Config.DrawBar.Label.SetText("READY");
-                }
+                // else if (drawCastInfo > 0 && drawCharges > 0)
+                // {
+                //     Config.DrawBar.Label.SetText("READY (" + current.ToString("0") + ")");
+                // }
+                // else
+                // {
+                //     Config.DrawBar.Label.SetText("READY");
+                // }
 
                 Config.DrawBar.DrawDrawLabel.SetText("");
                 cardColor = drawCharges > 0 ? Config.DrawBar.DrawCdReadyColor : Config.DrawBar.DrawCdColor;

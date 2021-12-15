@@ -162,7 +162,7 @@ namespace DelvUI.Config
 
     public class PluginConfigColor
     {
-        [JsonIgnore] private float[] _colorMapRatios = { -.8f, -.3f, .1f };
+        [JsonIgnore] private float[] _colorMapRatios = { -.8f, -.2f, .1f };
 
         [JsonIgnore] private Vector4 _vector;
 

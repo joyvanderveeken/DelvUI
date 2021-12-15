@@ -485,6 +485,7 @@ namespace DelvUI.Helpers
         [JobIDs.DRG] = "Dragoon",
         [JobIDs.NIN] = "Ninja",
         [JobIDs.SAM] = "Samurai",
+        [JobIDs.RPR] = "Reaper",
 
         // ranged phys dps
         [JobIDs.ARC] = "Archer",
@@ -505,6 +506,7 @@ namespace DelvUI.Helpers
         [JobIDs.WHM] = "White Mage",
         [JobIDs.SCH] = "Scholar",
         [JobIDs.AST] = "Astrologian",
+        [JobIDs.SGE] = "Sage",
 
         // crafters
         [JobIDs.CRP] = "Carpenter",
