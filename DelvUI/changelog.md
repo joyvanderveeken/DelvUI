@@ -1,3 +1,25 @@
+# 0.6.0.0
+Endwalker Beta Release:
+- Reworked job huds according to the new job changes.
+- Added job huds for Reaper and Sage.
+- Added a 3rd color option to "Color Based On Health Value" setting.
+- Added a Use Role Color option for labels.
+
+Fixes:
+- Fixed enmity in party frames for Trust and GC parties.
+
+# 0.5.1.0
+- Improved UI of the main config window.
+- Font sizes can now go up to 100. Be aware that fonts are shared between all plugins. If you add too many big fonts it may cause issues with Dalamud or straight up crash the game.
+- Fixed game cursor sometimes getting stuck when interacting with DelvUI frames.
+- Fixed possible crash when loading textures with a wrong format or corrupted files.
+
+# 0.5.0.3
+- Fixed more buff related crashes.
+
+# 0.5.0.2
+- Fixed crash when using the "Pet As Own Effect" setting on buff lists.
+
 # 0.5.0.1
 - Fixed castbars not drawing properly when anchored to unit frames.
 
