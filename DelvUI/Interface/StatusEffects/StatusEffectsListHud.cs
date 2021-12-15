@@ -78,7 +78,7 @@ namespace DelvUI.Interface.StatusEffects
 
             return count;
         }
-        
+
         protected string GetStatusActorName(StatusStruct status)
         {
             var character = Plugin.ObjectTable.SearchById(status.SourceID);
@@ -237,21 +237,19 @@ namespace DelvUI.Interface.StatusEffects
             {
                 bool isAFromPlayer = a.Status.SourceID == player.ObjectId;
                 bool isBFromPlayer = b.Status.SourceID == player.ObjectId;
-                bool isAFromPlayerPet = false;
-                bool isBFromPlayerPet = false;
-                
+
                 if (Config.IncludePetAsOwn)
                 {
-                    isAFromPlayerPet = IsStatusFromPlayerPet(a.Status);
-                    isBFromPlayerPet = IsStatusFromPlayerPet(b.Status);
+                    isAFromPlayer |= IsStatusFromPlayerPet(a.Status);
+                    isBFromPlayer |= IsStatusFromPlayerPet(b.Status);
                 }
 
-                if ((isAFromPlayer || isAFromPlayerPet) && (!isBFromPlayer || !isBFromPlayerPet))
+                if (isAFromPlayer && !isBFromPlayer)
                 {
                     return -1;
                 }
 
-                if ((!isAFromPlayer || !isAFromPlayerPet) && (isBFromPlayer || isBFromPlayerPet))
+                if (!isAFromPlayer && isBFromPlayer)
                 {
                     return 1;
                 }
@@ -510,7 +508,7 @@ namespace DelvUI.Interface.StatusEffects
             {
                 isFromPlayerPet = IsStatusFromPlayerPet(statusEffectData.Status);
             }
-            
+
             if (Config.IconConfig.OwnedBorderConfig.Enabled && (statusEffectData.Status.SourceID == Plugin.ClientState.LocalPlayer?.ObjectId || isFromPlayerPet))
             {
                 borderConfig = Config.IconConfig.OwnedBorderConfig;
