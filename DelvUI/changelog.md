@@ -1,3 +1,36 @@
+# 0.6.0.3
+Features:
+- Updated Paladin's hud to accommodate with the latest changes:
+    + Paladin hud mana bar removed since it doesn't have a special purpose anymore (the generic mana bar can be used instead).
+    + Requiescat Bar now shows the amount of stacks along with the duration of the buff.
+
+Fixes:
+- Fixed Astrologian card stacks number when at max stacks.
+
+# 0.6.0.2
+Features:
+- Added a Sacred Soil Bar for Scholar.
+- Separated Surging Tempest and Inner Release into 2 separate bars to better accomodate for the new Warrior changes.
+- New Warrior Inner Release Bar Features:
+    + Shows Inner Release (or Berserk) Stacks
+    + Option to show Inner Release buff duration
+    + Option to track Inner Release ability cooldown
+    + Optional bar glow when Primal Rend buff is gained by Inner Release at level 90.
+
+Fixes:
+- Fixed Bard's Bloodletter Bar showing 2 charges instead of 3 with the level 84 trait.
+- Fixed "[time-till-max-gp]" text tag not working properly.
+- Fixed Border Color on chunked bars.
+
+# 0.6.0.1
+Fixes:
+- Fixed Storm's Eye Bar not tracking the new Surging Tempest buff (renamed to Surging Tempest Bar).
+- Fixed Bard's DoTs and songs durations.
+- Fixed mana bar not being visible by default for Sage.
+- Fixed "Hide When Inactive" option of Summoner's Trance Bar. Also added an option to hide the Trance Bar when primals are active (i.e. to only show trance bar for bahamut and phoenix).
+- Fixed blacklist shortcut not working on status effects lists without buffs.
+- Fixed mouseover not working properly when automatic mode is disabled.
+
 # 0.6.0.0
 Endwalker Beta Release:
 - Reworked job huds according to the new job changes.
