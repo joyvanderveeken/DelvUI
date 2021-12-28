@@ -99,7 +99,7 @@ namespace DelvUI.Interface.GeneralElements
             bool isNameLeftAnchored = Config.CastNameLabel.TextAnchor == DrawAnchor.Left || Config.CastNameLabel.TextAnchor == DrawAnchor.TopLeft || Config.CastNameLabel.TextAnchor == DrawAnchor.BottomLeft;
             var namePos = Config.ShowIcon && isNameLeftAnchored ? startPos + new Vector2(iconSize.X, 0) : startPos;
             string? castName = LastUsedCast?.ActionText.CheckForUpperCase();
-            Config.CastNameLabel.SetText(Config.Preview ? "Cast Name" : castName ?? "");
+            Config.CastNameLabel.SetText(Config.Preview ? "SKL:Cast Name" : "SKL:" + castName ?? "");
             _castNameLabel.Draw(namePos, Config.Size, Actor);
 
             // cast time

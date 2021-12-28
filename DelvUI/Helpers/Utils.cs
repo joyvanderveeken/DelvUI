@@ -96,10 +96,10 @@ namespace DelvUI.Helpers
 
             return t.Hours switch
             {
-                > 1 => t.Hours + "h",
+                > 1 => "",
                 _ => t.Minutes switch
                 {
-                    >= 5 => t.Minutes + "m",
+                    >= 5 => "",
                     >= 1 => $"{t.Minutes}:{t.Seconds:00}",
                     _ => t.Seconds.ToString()
                 }
