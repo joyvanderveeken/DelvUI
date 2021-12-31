@@ -293,18 +293,6 @@ namespace DelvUI.Interface.Jobs
 
                 switch (drawCastInfo)
                 {
-<<<<<<< HEAD
-                    Config.DrawBar.Label.SetValue(current);
-                }
-                // else if (drawCastInfo > 0 && drawCharges > 0)
-                // {
-                //     Config.DrawBar.Label.SetText("READY (" + current.ToString("0") + ")");
-                // }
-                // else
-                // {
-                //     Config.DrawBar.Label.SetText("READY");
-                // }
-=======
                     case > 0 when drawCharges == 0:
                         Config.DrawBar.Label.SetValue(current);
                         break;
@@ -315,7 +303,6 @@ namespace DelvUI.Interface.Jobs
                         Config.DrawBar.Label.SetText("READY");
                         break;
                 }
->>>>>>> d9415184ed4134f29c83354d152d6adef43633b6
 
                 Config.DrawBar.DrawDrawLabel.SetText("");
                 cardColor = drawCharges > 0 ? Config.DrawBar.DrawCdReadyColor : Config.DrawBar.DrawCdColor;
