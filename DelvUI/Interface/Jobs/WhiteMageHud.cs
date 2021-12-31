@@ -1,15 +1,14 @@
-﻿using System;
-using System.Linq;
-using System.Numerics;
-using Dalamud.Game.ClientState.JobGauge.Types;
+﻿using Dalamud.Game.ClientState.JobGauge.Types;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using DelvUI.Config;
 using DelvUI.Config.Attributes;
 using DelvUI.Helpers;
 using DelvUI.Interface.Bars;
+using DelvUI.Interface.GeneralElements;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using Dalamud.Game.ClientState.Objects.SubKinds;
-using DelvUI.Interface.GeneralElements;
+using System.Linq;
+using System.Numerics;
 
 namespace DelvUI.Interface.Jobs
 {
@@ -72,20 +71,46 @@ namespace DelvUI.Interface.Jobs
         {
             Vector2 pos = origin + Config.Position;
 
-            if (Config.LilyBar.Enabled) { DrawLilyBar(pos, player); }
-            if (Config.DiaBar.Enabled) { DrawDiaBar(pos, player); }
-            if (Config.AsylumBar.Enabled) { DrawAsylumBar(pos, player); }
-            if (Config.PresenceOfMindBar.Enabled) { DrawPresenceOfMindBar(pos, player); }
-            if (Config.PlenaryBar.Enabled) { DrawPlenaryBar(pos, player); }
-            if (Config.TemperanceBar.Enabled) { DrawTemperanceBar(pos, player); }
+            if (Config.LilyBar.Enabled)
+            {
+                DrawLilyBar(pos, player);
+            }
+
+            if (Config.DiaBar.Enabled)
+            {
+                DrawDiaBar(pos, player);
+            }
+
+            if (Config.AsylumBar.Enabled)
+            {
+                DrawAsylumBar(pos, player);
+            }
+
+            if (Config.PresenceOfMindBar.Enabled)
+            {
+                DrawPresenceOfMindBar(pos, player);
+            }
+
+            if (Config.PlenaryBar.Enabled)
+            {
+                DrawPlenaryBar(pos, player);
+
+            }
+            if (Config.TemperanceBar.Enabled)
+            {
+                DrawTemperanceBar(pos, player);
+            }
         }
 
         private void DrawDiaBar(Vector2 origin, PlayerCharacter player)
         {
             var target = Plugin.TargetManager.SoftTarget ?? Plugin.TargetManager.Target;
 
-            BarUtilities.GetDoTBar(Config.DiaBar, player, target, DiaIDs, DiaDurations)?.
-                Draw(origin);
+            BarHud? bar = BarUtilities.GetDoTBar(Config.DiaBar, player, target, DiaIDs, DiaDurations);
+            if (bar != null)
+            {
+                AddDrawActions(bar.GetDrawActions(origin, Config.DiaBar.StrataLevel));
+            }
         }
 
         private void DrawLilyBar(Vector2 origin, PlayerCharacter player)
@@ -99,23 +124,33 @@ namespace DelvUI.Interface.Jobs
 
             if (!Config.LilyBar.HideWhenInactive || lilyScale > 0)
             {
-                BarUtilities.GetChunkedBars(Config.LilyBar, 3, lilyScale, 3).Draw(origin);
+                BarHud[] bars = BarUtilities.GetChunkedBars(Config.LilyBar, 3, lilyScale, 3, 0, player);
+                foreach (BarHud bar in bars)
+                {
+                    AddDrawActions(bar.GetDrawActions(origin, Config.LilyBar.StrataLevel));
+                }
             }
 
-            if (!Config.BloodLilyBar.HideWhenInactive || gauge.BloodLily > 0)
+            if (!Config.BloodLilyBar.HideWhenInactive && Config.BloodLilyBar.Enabled || gauge.BloodLily > 0)
             {
-                BarUtilities.GetChunkedBars(Config.BloodLilyBar, 3, gauge.BloodLily, 3).Draw(origin);
+                BarHud[] bars = BarUtilities.GetChunkedBars(Config.BloodLilyBar, 3, gauge.BloodLily, 3, 0, player);
+                foreach (BarHud bar in bars)
+                {
+                    AddDrawActions(bar.GetDrawActions(origin, Config.BloodLilyBar.StrataLevel));
+                }
             }
         }
 
         private void DrawAsylumBar(Vector2 origin, PlayerCharacter player)
         {
-            float asylymDuration = player.StatusList.FirstOrDefault(o => o.StatusId is 739 or 1911 or 1912 && o.SourceID == player.ObjectId)?.RemainingTime ?? 0f;
+            float asylymDuration = player.StatusList.FirstOrDefault(o => o.StatusId is 739 or 1911 && o.SourceID == player.ObjectId)?.RemainingTime ?? 0f;
 
             if (!Config.AsylumBar.HideWhenInactive || asylymDuration > 0)
             {
                 Config.AsylumBar.Label.SetValue(asylymDuration);
-                BarUtilities.GetProgressBar(Config.AsylumBar, asylymDuration, 24f, 0f, player).Draw(origin);
+
+                BarHud bar = BarUtilities.GetProgressBar(Config.AsylumBar, asylymDuration, 24f, 0f, player);
+                AddDrawActions(bar.GetDrawActions(origin, Config.AsylumBar.StrataLevel));
             }
         }
 
@@ -126,7 +161,9 @@ namespace DelvUI.Interface.Jobs
             if (!Config.PresenceOfMindBar.HideWhenInactive || presenceOfMindDuration > 0)
             {
                 Config.PresenceOfMindBar.Label.SetValue(presenceOfMindDuration);
-                BarUtilities.GetProgressBar(Config.PresenceOfMindBar, presenceOfMindDuration, 15f, 0f, player).Draw(origin);
+
+                BarHud bar = BarUtilities.GetProgressBar(Config.PresenceOfMindBar, presenceOfMindDuration, 15f, 0f, player);
+                AddDrawActions(bar.GetDrawActions(origin, Config.PresenceOfMindBar.StrataLevel));
             }
         }
 
@@ -137,7 +174,9 @@ namespace DelvUI.Interface.Jobs
             if (!Config.PlenaryBar.HideWhenInactive || plenaryDuration > 0)
             {
                 Config.PlenaryBar.Label.SetValue(plenaryDuration);
-                BarUtilities.GetProgressBar(Config.PlenaryBar, plenaryDuration, 10f, 0f, player).Draw(origin);
+
+                BarHud bar = BarUtilities.GetProgressBar(Config.PlenaryBar, plenaryDuration, 10f, 0f, player);
+                AddDrawActions(bar.GetDrawActions(origin, Config.PlenaryBar.StrataLevel));
             }
         }
 
@@ -148,7 +187,9 @@ namespace DelvUI.Interface.Jobs
             if (!Config.TemperanceBar.HideWhenInactive || temperanceDuration > 0)
             {
                 Config.TemperanceBar.Label.SetValue(temperanceDuration);
-                BarUtilities.GetProgressBar(Config.TemperanceBar, temperanceDuration, 20f, 0f, player).Draw(origin);
+
+                BarHud bar = BarUtilities.GetProgressBar(Config.TemperanceBar, temperanceDuration, 20f, 0f, player);
+                AddDrawActions(bar.GetDrawActions(origin, Config.TemperanceBar.StrataLevel));
             }
         }
     }

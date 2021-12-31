@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Dalamud.Game.ClientState.JobGauge.Types;
+﻿using Dalamud.Game.ClientState.JobGauge.Types;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using DelvUI.Config.Attributes;
 using DelvUI.Helpers;
 using DelvUI.Interface.Bars;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 
 namespace DelvUI.Interface.Jobs
 {
@@ -49,23 +49,29 @@ namespace DelvUI.Interface.Jobs
             }
         }
 
-        private void DrawPowderGauge(Vector2 pos, PlayerCharacter player)
+        private void DrawPowderGauge(Vector2 origin, PlayerCharacter player)
         {
             var gauge = Plugin.JobGauges.Get<GNBGauge>();
             if (!Config.PowderGauge.HideWhenInactive || gauge.Ammo > 0)
             {
                 var maxCartridges = player.Level >= 88 ? 3 : 2;
-                BarUtilities.GetChunkedBars(Config.PowderGauge, maxCartridges, gauge.Ammo, maxCartridges).Draw(pos);
+                BarHud[] bars = BarUtilities.GetChunkedBars(Config.PowderGauge, maxCartridges, gauge.Ammo, maxCartridges, 0, player);
+                foreach (BarHud bar in bars)
+                {
+                    AddDrawActions(bar.GetDrawActions(origin, Config.PowderGauge.StrataLevel));
+                }
             }
         }
 
-        private void DrawNoMercyBar(Vector2 pos, PlayerCharacter player)
+        private void DrawNoMercyBar(Vector2 origin, PlayerCharacter player)
         {
             float noMercyDuration = player.StatusList.FirstOrDefault(o => o.StatusId == 1831 && o.RemainingTime > 0f)?.RemainingTime ?? 0f;
             if (!Config.NoMercy.HideWhenInactive || noMercyDuration > 0)
             {
                 Config.NoMercy.Label.SetValue(noMercyDuration);
-                BarUtilities.GetProgressBar(Config.NoMercy, noMercyDuration, 20f, 0f, player).Draw(pos);
+
+                BarHud bar = BarUtilities.GetProgressBar(Config.NoMercy, noMercyDuration, 20f, 0f, player);
+                AddDrawActions(bar.GetDrawActions(origin, Config.NoMercy.StrataLevel));
             }
         }
     }

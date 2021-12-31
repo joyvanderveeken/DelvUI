@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Dalamud.Game.ClientState.JobGauge.Types;
+﻿using Dalamud.Game.ClientState.JobGauge.Types;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using DelvUI.Config;
@@ -10,6 +6,10 @@ using DelvUI.Config.Attributes;
 using DelvUI.Helpers;
 using DelvUI.Interface.Bars;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 
 namespace DelvUI.Interface.Jobs
 {
@@ -77,12 +77,12 @@ namespace DelvUI.Interface.Jobs
 
             if (Config.EyeOfTheDragonBar.Enabled)
             {
-                DrawEyeOfTheDragonBars(position);
+                DrawEyeOfTheDragonBars(position, player);
             }
 
             if (Config.FirstmindsFocusBar.Enabled)
             {
-                DrawFirstmindsFocusBars(position);
+                DrawFirstmindsFocusBars(position, player);
             }
 
             if (Config.LifeOfTheDragonBar.Enabled)
@@ -91,43 +91,56 @@ namespace DelvUI.Interface.Jobs
             }
         }
 
-        private void DrawChaosThrustBar(Vector2 pos, PlayerCharacter player)
+        private void DrawChaosThrustBar(Vector2 origin, PlayerCharacter player)
         {
             GameObject? target = Plugin.TargetManager.SoftTarget ?? Plugin.TargetManager.Target;
 
-            BarUtilities.GetDoTBar(Config.ChaosThrustBar, player, target, ChaosThrustIDs, ChaosThrustDurations)?.
-                Draw(pos);
+            BarHud? bar = BarUtilities.GetDoTBar(Config.ChaosThrustBar, player, target, ChaosThrustIDs, ChaosThrustDurations);
+            if (bar != null)
+            {
+                AddDrawActions(bar.GetDrawActions(origin, Config.ChaosThrustBar.StrataLevel));
+            }
         }
 
-        private void DrawEyeOfTheDragonBars(Vector2 pos)
+        private void DrawEyeOfTheDragonBars(Vector2 origin, PlayerCharacter player)
         {
             DRGGauge gauge = Plugin.JobGauges.Get<DRGGauge>();
 
             if (!Config.EyeOfTheDragonBar.HideWhenInactive || gauge.EyeCount > 0)
             {
-                BarUtilities.GetChunkedBars(Config.EyeOfTheDragonBar, 2, gauge.EyeCount, 2).Draw(pos);
+                BarHud[] bars = BarUtilities.GetChunkedBars(Config.EyeOfTheDragonBar, 2, gauge.EyeCount, 2, 0, player);
+                foreach (BarHud bar in bars)
+                {
+                    AddDrawActions(bar.GetDrawActions(origin, Config.EyeOfTheDragonBar.StrataLevel));
+                }
             }
         }
 
-        private void DrawFirstmindsFocusBars(Vector2 pos)
+        private void DrawFirstmindsFocusBars(Vector2 origin, PlayerCharacter player)
         {
             DRGGauge gauge = Plugin.JobGauges.Get<DRGGauge>();
 
             if (!Config.FirstmindsFocusBar.HideWhenInactive || gauge.FirstmindsFocusCount > 0)
             {
-                BarUtilities.GetChunkedBars(Config.FirstmindsFocusBar, 2, gauge.FirstmindsFocusCount, 2).Draw(pos);
+                BarHud[] bars = BarUtilities.GetChunkedBars(Config.FirstmindsFocusBar, 2, gauge.FirstmindsFocusCount, 2, 0, player);
+                foreach (BarHud bar in bars)
+                {
+                    AddDrawActions(bar.GetDrawActions(origin, Config.FirstmindsFocusBar.StrataLevel));
+                }
             }
         }
 
-        private void DrawBloodOfTheDragonBar(Vector2 pos, PlayerCharacter player)
+        private void DrawBloodOfTheDragonBar(Vector2 origin, PlayerCharacter player)
         {
             DRGGauge gauge = Plugin.JobGauges.Get<DRGGauge>();
-            var durationMs = gauge.LOTDTimer;
+            float duration = gauge.LOTDTimer / 1000f;
 
-            if (!Config.LifeOfTheDragonBar.HideWhenInactive || durationMs > 0f)
+            if (!Config.LifeOfTheDragonBar.HideWhenInactive || duration > 0f)
             {
-                Config.LifeOfTheDragonBar.Label.SetValue(durationMs / 1000);
-                BarUtilities.GetProgressBar(Config.LifeOfTheDragonBar, durationMs, 30000f, 0f, player).Draw(pos);
+                Config.LifeOfTheDragonBar.Label.SetValue(duration);
+
+                BarHud bar = BarUtilities.GetProgressBar(Config.LifeOfTheDragonBar, duration, 30, 0f, player);
+                AddDrawActions(bar.GetDrawActions(origin, Config.LifeOfTheDragonBar.StrataLevel));
             }
         }
 
@@ -137,7 +150,9 @@ namespace DelvUI.Interface.Jobs
             if (!Config.PowerSurgeBar.HideWhenInactive || duration > 0f)
             {
                 Config.PowerSurgeBar.Label.SetValue(duration);
-                BarUtilities.GetProgressBar(Config.PowerSurgeBar, duration, 30f, 0f, player).Draw(origin);
+
+                BarHud bar = BarUtilities.GetProgressBar(Config.PowerSurgeBar, duration, 30f, 0f, player);
+                AddDrawActions(bar.GetDrawActions(origin, Config.PowerSurgeBar.StrataLevel));
             }
         }
     }

@@ -1,3 +1,59 @@
+# 0.6.2.0
+Features:
+- Party Frames layout is now configured with the new Rows and Column settings:
+    + Party Frames are not longer draggable / resizable when the config window is opened.
+    + This is a breaking change in the config. When updating, the Party Frames will likely be in a bad position and with an incorrect layout. Use the Position, Rows and Columns settings to correct it. The actual elements inside the frames should remain exactly the same as before the update.
+- Added Strata Level settings to most UI elements (these allow the user to choose which elements are drawn on top of others).
+- Castbars have been given the option to set a Fill Direction.
+- Castbars now has a Reverse Fill option to use in place of normal Background Color settings.
+- Added more settings to Party Frames health bars so they are more in line with other unit frames.
+- Added "dead" status icon in the Party Frames.
+- Added Thresholds for Bard Songs with the recommended song rotation (43, 34, 43).
+
+Fixes:
+- Fixed Dancer Proc Bars so they can be individually disabled.
+- Fixed Reaper and Sage not appearing in Party Frames on preview mode.
+
+# 0.6.1.2
+Features:
+- Astrologian Minor Arcana Bar now has a label to track cooldown of Minor Arcana whilst a Crown Card is drawn. Note that this will not work for users of the XIVCombo plugin that has selected the option to turn Minor Arcana into Crown Play.
+- Dark Knight's' Delirium Bar now shows the amount of stacks along with the duration of the buff.
+- Added tooltips for party cooldowns.
+- Added Rescue, Swiftcast and Tank's invulnerabilities as trackable party cooldowns (disabled by default).
+
+Fixes:
+- Fixed job and role colors not working on some job hud bars.
+- Fixed Summoner's Ifrit, Titan and Garuda bars "Hide When Inactive" not working.
+- Dark Knight's Mana Bar now shows correct mana thresholds on the non-chunked version.
+- Fixed Missing Health color when using transparent bars.
+- Fixed Party Cooldowns not saving properly in some situations.
+
+# 0.6.1.1
+Features:
+- Sage Kerachole tracker now also tracks Holos uptime and the config option for this bar was renamed to show that.
+
+Fixes:
+- Fixed some game windows covering DelvUI elements.
+- Fixed Summoner's Rekindle not working with mouseover on automatic mode.
+- Fixed "Hide when inactive" not working properly for Astrologian Minor Arcana Bar.
+- Fixed Party Cooldowns not working properly when "Show When Solo" is enabled.
+
+# 0.6.1.0
+Features:
+- Added Party Cooldowns tracker:
+    + You can choose which spells to track (only party-wide effects enabled for now).
+    + The hud displays a grid with all the tracked spells for every member.
+    + You can organize them by priorty and column.
+- Added a Minor Arcana Bar for Astrologian.
+- Added a third label for unit frames that is empty by default.
+
+Fixes:
+- Fixed Bard Coda bar never showing when "Hide When Inactive" is checked.
+- Fixed mana bar not being visible by default for Summoner.
+- Fixed threshold values for some bars being incorrect.
+- Fixed disable for Sage Addersting and White Mage Blood Lily bars.
+- Fixed Tank Invulnerability Background Color so it now also works for unit frame profiles that use "Missing Health Color".
+
 # 0.6.0.3
 Features:
 - Updated Paladin's hud to accommodate with the latest changes:

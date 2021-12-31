@@ -92,7 +92,7 @@ namespace DelvUI.Interface.Jobs
 
             if (Config.EspritGauge.Enabled)
             {
-                DrawEspritBar(pos);
+                DrawEspritBar(pos, player);
             }
 
             if (Config.FeatherGauge.Enabled)
@@ -118,30 +118,28 @@ namespace DelvUI.Interface.Jobs
             bool showingStepBar = false;
             if (Config.StepsBar.Enabled)
             {
-                showingStepBar = DrawStepBar(pos);
+                showingStepBar = DrawStepBar(pos, player);
             }
 
             if (!showingStepBar || !Config.StepsBar.HideProcs)
             {
-                DrawProcBar(pos, player, Config.CascadeBar, 2693);
-                DrawProcBar(pos, player, Config.FountainBar, 2694);
-                DrawProcBar(pos, player, Config.WindmillBar, 2693);
-                DrawProcBar(pos, player, Config.ShowerBar, 2694);
+                if (Config.CascadeBar.Enabled) { DrawProcBar(pos, player, Config.CascadeBar, 2693); }
+                if (Config.FountainBar.Enabled) { DrawProcBar(pos, player, Config.FountainBar, 2694); }
+                if (Config.WindmillBar.Enabled) { DrawProcBar(pos, player, Config.WindmillBar, 2693); }
+                if (Config.ShowerBar.Enabled) { DrawProcBar(pos, player, Config.ShowerBar, 2694); }
             }
         }
 
         private void DrawProcBar(Vector2 origin, PlayerCharacter player, DancerProcBarConfig config, uint statusId)
         {
-            if (!config.Enabled)
+            BarHud? bar = BarUtilities.GetProcBar(config, player, statusId, 20f, !config.IgnoreBuffDuration);
+            if (bar != null)
             {
-                return;
+                AddDrawActions(bar.GetDrawActions(origin, config.StrataLevel));
             }
-
-            BarUtilities.GetProcBar(config, player, statusId, 20f, !config.IgnoreBuffDuration)?.
-                Draw(origin);
         }
 
-        private unsafe bool DrawStepBar(Vector2 origin)
+        private unsafe bool DrawStepBar(Vector2 origin, PlayerCharacter player)
         {
             var gauge = Plugin.JobGauges.Get<DNCGauge>();
             if (!gauge.IsDancing)
@@ -205,20 +203,28 @@ namespace DelvUI.Interface.Jobs
                 }
             }
 
-            BarUtilities.GetChunkedBars(Config.StepsBar, chunks.ToArray(), null, Config.StepsBar.GlowConfig, glows.ToArray())
-                .Draw(origin);
+            BarHud[] bars = BarUtilities.GetChunkedBars(Config.StepsBar, chunks.ToArray(), player, Config.StepsBar.GlowConfig, glows.ToArray());
+            foreach (BarHud bar in bars)
+            {
+                AddDrawActions(bar.GetDrawActions(origin, Config.StepsBar.StrataLevel));
+            }
 
             return true;
         }
 
-        private void DrawEspritBar(Vector2 origin)
+        private void DrawEspritBar(Vector2 origin, PlayerCharacter player)
         {
             DNCGauge gauge = Plugin.JobGauges.Get<DNCGauge>();
 
             if (Config.EspritGauge.HideWhenInactive && gauge.Esprit is 0) { return; }
 
             Config.EspritGauge.Label.SetValue(gauge.Esprit);
-            BarUtilities.GetChunkedProgressBars(Config.EspritGauge, 2, gauge.Esprit, 100, 0f).Draw(origin);
+
+            BarHud[] bars = BarUtilities.GetChunkedProgressBars(Config.EspritGauge, 2, gauge.Esprit, 100, 0f, player);
+            foreach (BarHud bar in bars)
+            {
+                AddDrawActions(bar.GetDrawActions(origin, Config.EspritGauge.StrataLevel));
+            }
         }
 
         private void DrawFeathersBar(Vector2 origin, PlayerCharacter player)
@@ -239,8 +245,11 @@ namespace DelvUI.Interface.Jobs
             }
 
             BarGlowConfig? config = hasFlourishingBuff ? Config.FeatherGauge.GlowConfig : null;
-            BarUtilities.GetChunkedBars(Config.FeatherGauge, 4, gauge.Feathers, 4, glowConfig: config, chunksToGlow: glows)
-                .Draw(origin);
+            BarHud[] bars = BarUtilities.GetChunkedBars(Config.FeatherGauge, 4, gauge.Feathers, 4, 0, player, glowConfig: config, chunksToGlow: glows);
+            foreach (BarHud bar in bars)
+            {
+                AddDrawActions(bar.GetDrawActions(origin, Config.FeatherGauge.StrataLevel));
+            }
         }
 
         private void DrawTechnicalBar(Vector2 origin, PlayerCharacter player)
@@ -252,7 +261,9 @@ namespace DelvUI.Interface.Jobs
             if (!Config.TechnicalFinishBar.HideWhenInactive || technicalFinishDuration > 0)
             {
                 Config.TechnicalFinishBar.Label.SetValue(Math.Abs(technicalFinishDuration));
-                BarUtilities.GetProgressBar(Config.TechnicalFinishBar, technicalFinishDuration, 20f, 0f, player).Draw(origin);
+
+                BarHud bar = BarUtilities.GetProgressBar(Config.TechnicalFinishBar, technicalFinishDuration, 20f, 0f, player);
+                AddDrawActions(bar.GetDrawActions(origin, Config.TechnicalFinishBar.StrataLevel));
             }
         }
 
@@ -263,7 +274,9 @@ namespace DelvUI.Interface.Jobs
             if (!Config.DevilmentBar.HideWhenInactive || devilmentDuration > 0)
             {
                 Config.DevilmentBar.Label.SetValue(Math.Abs(devilmentDuration));
-                BarUtilities.GetProgressBar(Config.DevilmentBar, devilmentDuration, 20f, 0f, player).Draw(origin);
+
+                BarHud bar = BarUtilities.GetProgressBar(Config.DevilmentBar, devilmentDuration, 20f, 0f, player);
+                AddDrawActions(bar.GetDrawActions(origin, Config.DevilmentBar.StrataLevel));
             }
         }
 
@@ -274,7 +287,9 @@ namespace DelvUI.Interface.Jobs
             if (!Config.StandardFinishBar.HideWhenInactive || standardFinishDuration > 0)
             {
                 Config.StandardFinishBar.Label.SetValue(Math.Abs(standardFinishDuration));
-                BarUtilities.GetProgressBar(Config.StandardFinishBar, standardFinishDuration, 60f, 0f, player).Draw(origin);
+
+                BarHud bar = BarUtilities.GetProgressBar(Config.StandardFinishBar, standardFinishDuration, 60f, 0f, player);
+                AddDrawActions(bar.GetDrawActions(origin, Config.StandardFinishBar.StrataLevel));
             }
         }
     }
