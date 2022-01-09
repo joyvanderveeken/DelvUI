@@ -1,3 +1,33 @@
+# 0.6.3.4
+- Fixed window clipping not working.
+
+# 0.6.3.3
+Features:
+- Added element background colors for Black Mage's custom mana bar.
+- Added element colors for Black Mage's Paradox bar.
+
+Fixes:
+- GCD Indicator now works for melee classes under level 30.
+- Fixed Black Mage's mana bar "Use Element Color" setting not disabling properly.
+
+# 0.6.3.2
+- Fixed crashes caused by setting Missing Health Color to use Job or Role Colors.
+
+# 0.6.3.1
+Features:
+- Added option to show Total Casttime on top of Current Casttime for Castbars.
+- Added option to use Job and Role Color as Background Color in Party Frames.
+- Added option to use Job and Role Color as Missing Health Color in Party Frames.
+- Added option to use Role Color as Background Color in Unit Frames.
+- Added option to use Job and Role Color as Missing Health Color in Unit Frames.
+
+Fixes:
+- Fixed positioning of the label on Dark Knight's Delirium Bar.
+- Fixed positioning of the label on Warrior's Inner Release Bar.
+- Spearfishing window will now be drawn on top of DelvUI.
+- Fixed Party Frames not updating properly when resizing the health bars.
+- Fixed Party Frames Tank Invulnerability Background Color when using Missing Health Color.
+
 # 0.6.3.0
 Features:
 - Added setting to Status Effects Lists to disable mouse interactions.
