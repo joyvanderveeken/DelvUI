@@ -524,6 +524,64 @@ namespace DelvUI.Helpers
         [JobIDs.FSH] = "Fisher",
     };
 
+            public static Dictionary<uint, string> RoleIcon = new Dictionary<uint, string>()
+        {
+            // tanks
+            [JobIDs.GLD] = "ô",
+            [JobIDs.MRD] = "ô",
+            [JobIDs.PLD] = "ô",
+            [JobIDs.WAR] = "ô",
+            [JobIDs.DRK] = "ô",
+            [JobIDs.GNB] = "ô",
+
+            // melee dps
+            [JobIDs.PGL] = "õ",
+            [JobIDs.LNC] = "õ",
+            [JobIDs.ROG] = "õ",
+            [JobIDs.MNK] = "õ",
+            [JobIDs.DRG] = "õ",
+            [JobIDs.NIN] = "õ",
+            [JobIDs.SAM] = "õ",
+            [JobIDs.RPR] = "õ",
+
+            // ranged phys dps
+            [JobIDs.ARC] = "õ",
+            [JobIDs.BRD] = "õ",
+            [JobIDs.MCH] = "õ",
+            [JobIDs.DNC] = "õ",
+
+            // ranged magic dps
+            [JobIDs.THM] = "õ",
+            [JobIDs.ACN] = "õ",
+            [JobIDs.BLM] = "õ",
+            [JobIDs.SMN] = "õ",
+            [JobIDs.RDM] = "õ",
+            [JobIDs.BLU] = "õ",
+
+            // healers
+            [JobIDs.CNJ] = "+",
+            [JobIDs.WHM] = "+",
+            [JobIDs.SCH] = "+",
+            [JobIDs.SGE] = "+",
+            [JobIDs.AST] = "+",
+
+            // crafters
+            [JobIDs.CRP] = "ó",
+            [JobIDs.BSM] = "ó",
+            [JobIDs.ARM] = "ó",
+            [JobIDs.GSM] = "ó",
+            [JobIDs.LTW] = "ó",
+            [JobIDs.WVR] = "ó",
+            [JobIDs.ALC] = "ó",
+            [JobIDs.CUL] = "ó",
+
+            // gatherers
+            [JobIDs.MIN] = "ö",
+            [JobIDs.BOT] = "ö",
+            [JobIDs.FSH] = "ö",
+        };
+
+
         public static Dictionary<JobRoles, string> RoleNames = new Dictionary<JobRoles, string>()
         {
             [JobRoles.Tank] = "Tank",

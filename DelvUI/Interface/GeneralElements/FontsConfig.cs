@@ -38,7 +38,7 @@ namespace DelvUI.Interface.GeneralElements
         public bool SupportChineseCharacters = false;
         public bool SupportKoreanCharacters = false;
 
-        [JsonIgnore] public static readonly List<string> DefaultFontsKeys = new List<string>() { "Expressway_24", "Expressway_20", "Expressway_16", "AXIS_24", "AXIS_20", "AXIS_16" };
+        [JsonIgnore] public static readonly List<string> DefaultFontsKeys = new List<string>() { "RodinBold_12", "RodinBold_14", "RodinAutomata_14", "RodinAutomata_16", "RodinAutomata_18", "RodinAutomata_20", "RodinAutomata_22" };
         [JsonIgnore] public static string DefaultBigFontKey => DefaultFontsKeys[0];
         [JsonIgnore] public static string DefaultMediumFontKey => DefaultFontsKeys[1];
         [JsonIgnore] public static string DefaultSmallFontKey => DefaultFontsKeys[2];
