@@ -104,8 +104,8 @@ namespace DelvUI.Helpers
                 > 1 => "",
                 _ => t.Minutes switch
                 {
-                    >= 5 => "",
-                    >= 1 => $"{t.Minutes}:{t.Seconds:00}",
+                    > 1 => "",
+                    >= 1 => $"{t.Seconds:00}",
                     _ => t.Seconds.ToString()
                 }
             };
