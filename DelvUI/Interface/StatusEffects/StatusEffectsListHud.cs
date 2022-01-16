@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Utility;
 using DelvUI.Config;
@@ -9,13 +10,12 @@ using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Dalamud.Game.ClientState.Buddy;
 using LuminaStatus = Lumina.Excel.GeneratedSheets.Status;
 using StatusStruct = FFXIVClientStructs.FFXIV.Client.Game.Status;
 
 namespace DelvUI.Interface.StatusEffects
 {
-    public class StatusEffectsListHud : ParentAnchoredDraggableHudElement, IHudElementWithActor, IHudElementWithAnchorableParent, IHudElementWithPreview
+    public class StatusEffectsListHud : ParentAnchoredDraggableHudElement, IHudElementWithActor, IHudElementWithAnchorableParent, IHudElementWithPreview, IHudElementWithMouseOver
     {
         protected StatusEffectsListConfig Config => (StatusEffectsListConfig)_config;
 
@@ -27,6 +27,9 @@ namespace DelvUI.Interface.StatusEffects
         private LabelHud _durationLabel;
         private LabelHud _stacksLabel;
         public GameObject? Actor { get; set; } = null;
+
+        private bool _wasHovering = false;
+        private bool NeedsSpecialInput => !ClipRectsHelper.Instance.Enabled || ClipRectsHelper.Instance.Mode == WindowClippingMode.Performance;
 
         protected override bool AnchorToParent => Config is UnitFrameStatusEffectsListConfig config ? config.AnchorToUnitFrame : false;
         protected override DrawAnchor ParentAnchor => Config is UnitFrameStatusEffectsListConfig config ? config.UnitFrameAnchor : DrawAnchor.Center;
@@ -56,6 +59,15 @@ namespace DelvUI.Interface.StatusEffects
         {
             var pos = CalculateStartPosition(Config.Position, Config.Size, Config.GetGrowthDirections());
             return (new List<Vector2>() { pos + Config.Size / 2f }, new List<Vector2>() { Config.Size });
+        }
+
+        public void StopMouseover()
+        {
+            if (_wasHovering && NeedsSpecialInput)
+            {
+                InputsHelper.Instance.StopHandlingInputs();
+                _wasHovering = false;
+            }
         }
 
         private uint CalculateLayout(List<StatusEffectData> list)
@@ -100,9 +112,10 @@ namespace DelvUI.Interface.StatusEffects
 
         protected unsafe List<StatusEffectData> StatusEffectDataList(GameObject? actor)
         {
-            var list = new List<StatusEffectData>();
-
+            List<StatusEffectData> list = new List<StatusEffectData>();
+            PlayerCharacter? player = Plugin.ClientState.LocalPlayer;
             BattleChara? character = null;
+            int count = StatusEffectListsSize;
 
             if (_fakeEffects == null)
             {
@@ -113,10 +126,7 @@ namespace DelvUI.Interface.StatusEffects
 
                 character = (BattleChara)actor;
             }
-
-            var player = Plugin.ClientState.LocalPlayer;
-            var count = StatusEffectListsSize;
-            if (_fakeEffects != null)
+            else
             {
                 count = Config.Limit == -1 ? _fakeEffects.Length : Math.Min(Config.Limit, _fakeEffects.Length);
             }
@@ -158,7 +168,7 @@ namespace DelvUI.Interface.StatusEffects
                 }
 
                 // filter "invisible" status effects
-                if (data.Name.ToString().Length == 0 || data.Icon == 0)
+                if (data.Icon == 0 || data.Name.ToString().Length == 0)
                 {
                     continue;
                 }
@@ -382,11 +392,14 @@ namespace DelvUI.Interface.StatusEffects
                 });
             });
 
+            StatusEffectData? hoveringData = null;
+            GameObject? character = Actor;
+
             // labels need to be drawn separated since they have their own window for clipping
             for (var i = 0; i < count; i++)
             {
-                var iconPos = iconPositions[i];
-                var statusEffectData = list[i];
+                Vector2 iconPos = iconPositions[i];
+                StatusEffectData statusEffectData = list[i];
 
                 // duration
                 if (Config.IconConfig.DurationLabelConfig.Enabled &&
@@ -397,7 +410,7 @@ namespace DelvUI.Interface.StatusEffects
                     {
                         double duration = Math.Round(Math.Abs(statusEffectData.Status.RemainingTime));
                         Config.IconConfig.DurationLabelConfig.SetText(Utils.DurationToString(duration));
-                        _durationLabel.Draw(iconPos, Config.IconConfig.Size);
+                        _durationLabel.Draw(iconPos, Config.IconConfig.Size, character);
                     });
                 }
 
@@ -410,43 +423,73 @@ namespace DelvUI.Interface.StatusEffects
                     AddDrawAction(Config.IconConfig.StacksLabelConfig.StrataLevel, () =>
                     {
                         Config.IconConfig.StacksLabelConfig.SetText($"{statusEffectData.Status.StackCount}");
-                        _stacksLabel.Draw(iconPos, Config.IconConfig.Size);
+                        _stacksLabel.Draw(iconPos, Config.IconConfig.Size, character);
                     });
                 }
 
                 // tooltips / interaction
                 if (ImGui.IsMouseHoveringRect(iconPos, iconPos + Config.IconConfig.Size))
                 {
-                    // tooltip
-                    if (Config.ShowTooltips)
+                    hoveringData = statusEffectData;
+                }
+            }
+
+            if (hoveringData.HasValue)
+            {
+                StatusEffectData data = hoveringData.Value;
+
+                if (NeedsSpecialInput)
+                {
+                    _wasHovering = true;
+                    InputsHelper.Instance.StartHandlingInputs();
+                }
+
+                // tooltip
+                if (Config.ShowTooltips)
+                {
+                    TooltipsHelper.Instance.ShowTooltipOnCursor(
+                        data.Data.Description.ToDalamudString().ToString(),
+                        data.Data.Name,
+                        data.Status.StatusID,
+                        GetStatusActorName(data.Status)
+                    );
+                }
+
+                bool leftClick = InputsHelper.Instance.HandlingMouseInputs ? InputsHelper.Instance.LeftButtonClicked : ImGui.GetIO().MouseClicked[0];
+                bool rightClick = InputsHelper.Instance.HandlingMouseInputs ? InputsHelper.Instance.RightButtonClicked : ImGui.GetIO().MouseClicked[1];
+
+                // remove buff on right click
+                bool isFromPlayer = data.Status.SourceID == Plugin.ClientState.LocalPlayer?.ObjectId;
+
+                if (data.Data.Category == 1 && isFromPlayer && rightClick)
+                {
+                    ChatHelper.SendChatMessage("/statusoff \"" + data.Data.Name + "\"");
+
+                    if (NeedsSpecialInput)
                     {
-                        TooltipsHelper.Instance.ShowTooltipOnCursor(
-                            statusEffectData.Data.Description.ToDalamudString().ToString(),
-                            statusEffectData.Data.Name,
-                            statusEffectData.Status.StatusID,
-                            GetStatusActorName(statusEffectData.Status)
-                        );
-                    }
-
-                    bool leftClick = InputsHelper.Instance.HandlingMouseInputs ? InputsHelper.Instance.LeftButtonClicked : ImGui.GetIO().MouseClicked[0];
-                    bool rightClick = InputsHelper.Instance.HandlingMouseInputs ? InputsHelper.Instance.RightButtonClicked : ImGui.GetIO().MouseClicked[1];
-
-                    // remove buff on right click
-                    bool isFromPlayer = statusEffectData.Status.SourceID == Plugin.ClientState.LocalPlayer?.ObjectId;
-
-                    if (statusEffectData.Data.Category == 1 && isFromPlayer && rightClick)
-                    {
-                        ChatHelper.SendChatMessage("/statusoff \"" + statusEffectData.Data.Name + "\"");
-                    }
-
-                    // automatic add to black list with ctrl+alt+shift click
-                    if (Config.BlacklistConfig.Enabled &&
-                        ImGui.GetIO().KeyCtrl && ImGui.GetIO().KeyAlt && ImGui.GetIO().KeyShift && leftClick)
-                    {
-                        Config.BlacklistConfig.AddNewEntry(statusEffectData.Data);
-                        ConfigurationManager.Instance.ForceNeedsSave();
+                        _wasHovering = false;
+                        InputsHelper.Instance.StopHandlingInputs();
                     }
                 }
+
+                // automatic add to black list with ctrl+alt+shift click
+                if (Config.BlacklistConfig.Enabled &&
+                    ImGui.GetIO().KeyCtrl && ImGui.GetIO().KeyAlt && ImGui.GetIO().KeyShift && leftClick)
+                {
+                    Config.BlacklistConfig.AddNewEntry(data.Data);
+                    ConfigurationManager.Instance.ForceNeedsSave();
+
+                    if (NeedsSpecialInput)
+                    {
+                        _wasHovering = false;
+                        InputsHelper.Instance.StopHandlingInputs();
+                    }
+                }
+            }
+            else if (_wasHovering && NeedsSpecialInput)
+            {
+                _wasHovering = false;
+                InputsHelper.Instance.StopHandlingInputs();
             }
         }
 

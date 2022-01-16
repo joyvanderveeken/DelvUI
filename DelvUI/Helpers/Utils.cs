@@ -101,7 +101,7 @@ namespace DelvUI.Helpers
 
             return t.Hours switch
             {
-                > 1 => "",
+                >= 1 => "h",
                 _ => t.Minutes switch
                 {
                     > 1 => "",

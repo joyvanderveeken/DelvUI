@@ -187,7 +187,9 @@ namespace DelvUI.Interface.Party
             }
             else if (_configs.HealthBar.ColorsConfig.UseRoleColorAsBackgroundColor && character is BattleChara)
             {
-                bgColor = GlobalColors.Instance.SafeRoleColorForJobId(character.ClassJob.Id);
+                bgColor = _configs.HealthBar.RangeConfig.Enabled
+                    ? GetDistanceColor(character, GlobalColors.Instance.SafeRoleColorForJobId(character.ClassJob.Id))
+                    : GlobalColors.Instance.SafeRoleColorForJobId(character.ClassJob.Id);
             }
 
             Rect background = new Rect(Position, _configs.HealthBar.Size, bgColor);
@@ -202,11 +204,9 @@ namespace DelvUI.Interface.Party
             }
 
             float hpScale = maxHp > 0 ? (float)currentHp / (float)maxHp : 1;
-            PluginConfigColor? hpColor = GetColor(hpScale);
-            if (_configs.HealthBar.RangeConfig.Enabled)
-            {
-                hpColor = GetDistanceColor(character, hpColor);
-            }
+            PluginConfigColor? hpColor = _configs.HealthBar.RangeConfig.Enabled
+            ? GetDistanceColor(character, GetColor(hpScale))
+            : GetColor(hpScale);
 
             Rect healthFill = BarUtilities.GetFillRect(Position, _configs.HealthBar.Size, _configs.HealthBar.FillDirection, hpColor, currentHp, maxHp);
 
@@ -230,8 +230,6 @@ namespace DelvUI.Interface.Party
             // missing health
             if (_configs.HealthBar.ColorsConfig.UseMissingHealthBar)
             {
-
-
                 Vector2 healthMissingSize = _configs.HealthBar.Size - BarUtilities.GetFillDirectionOffset(healthFill.Size, _configs.HealthBar.FillDirection);
                 Vector2 healthMissingPos = _configs.HealthBar.FillDirection.IsInverted() ? Position : Position + BarUtilities.GetFillDirectionOffset(healthFill.Size, _configs.HealthBar.FillDirection);
 
@@ -241,6 +239,11 @@ namespace DelvUI.Interface.Party
                         ? GlobalColors.Instance.SafeRoleColorForJobId(character!.ClassJob.Id)
                         : _configs.HealthBar.ColorsConfig.HealthMissingColor;
 
+                if (_configs.HealthBar.ColorsConfig.UseDeathIndicatorBackgroundColor && Member.HP <= 0 && character != null)
+                {
+                    missingHealthColor = _configs.HealthBar.ColorsConfig.DeathIndicatorBackgroundColor;
+                }
+
                 if (_configs.Trackers.Invuln.ChangeBackgroundColorWhenInvuln && character is BattleChara battleChara)
                 {
                     Status? tankInvuln = Utils.GetTankInvulnerabilityID(battleChara);
@@ -248,6 +251,11 @@ namespace DelvUI.Interface.Party
                     {
                         missingHealthColor = _configs.Trackers.Invuln.BackgroundColor;
                     }
+                }
+
+                if (_configs.HealthBar.RangeConfig.Enabled)
+                {
+                    missingHealthColor = GetDistanceColor(character, missingHealthColor);
                 }
 
                 bar.AddForegrounds(new Rect(healthMissingPos, healthMissingSize, missingHealthColor));
@@ -437,6 +445,7 @@ namespace DelvUI.Interface.Party
                 {
                     _manaBarHud.Actor = character;
                     _manaBarHud.PartyMember = Member;
+                    _manaBarHud.PrepareForDraw(parentPos);
                     _manaBarHud.Draw(parentPos);
                 }
                 ));
@@ -447,6 +456,7 @@ namespace DelvUI.Interface.Party
             drawActions.Add((_configs.Buffs.StrataLevel, () =>
             {
                 _buffsListHud.Actor = character;
+                _buffsListHud.PrepareForDraw(buffsPos);
                 _buffsListHud.Draw(buffsPos);
             }
             ));
@@ -455,6 +465,7 @@ namespace DelvUI.Interface.Party
             drawActions.Add((_configs.Debuffs.StrataLevel, () =>
             {
                 _debuffsListHud.Actor = character;
+                _debuffsListHud.PrepareForDraw(debuffsPos);
                 _debuffsListHud.Draw(debuffsPos);
             }
             ));
@@ -464,6 +475,7 @@ namespace DelvUI.Interface.Party
             drawActions.Add((_configs.CastBar.StrataLevel, () =>
             {
                 _castbarHud.Actor = character;
+                _castbarHud.PrepareForDraw(castbarPos);
                 _castbarHud.Draw(castbarPos);
             }
             ));

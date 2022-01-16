@@ -1,3 +1,43 @@
+# 1.0.0.2
+Features:
+- Added "Right" and "Left" growth directions for Party Cooldowns:
+    + "Columns" renamed to "Sections". When using a vertical growth direction the Section of a cooldown would be the column. On horizontal directions, it would be the row.
+    + Due to adjustments in the positioning logic, the list might be silightly moved when updating.
+- Added an option to show mana up to 10k on Dark Knight's mana bar. Note that this will break thresholds.
+- Separated the Automaton Queen/Rook Autoturret duration tracker from the Battery Gauge into its own bar.
+
+Fixes:
+- Fixed "Use Job Color" and "Use Role Color" for status effects duration and stacks labels.
+- Fixed Job Huds strata level not working properly.
+- Fixed status effects durations when they are 1 hour or longer.
+- Fixed border thickness not working on some chunked bars.
+
+# 1.0.0.1
+Fixes:
+- Fixed Status Effect Lists interactions not working with Window Clipping disabled or in Performance Mode.
+- Fixed GCD Indicator and MP Ticker strata levels not working properly.
+- Fixed strata levels not saving properly for some elements.
+- Fixed Death Indicator Color when using Missing Health Color for unit and party frames.
+- Fixed Player Castbar freezing when interacting with some objects.
+- Fixed targets in the Enemy List not being targetable when "Highlight When Hovering With Cursor" was disabled.
+- Fixed "Change Alpha Based on Range" for Missing Health Color and Background Color on Enemy List frames.
+
+# 1.0.0.0
+Features:
+- Several changes made to Window Clipping:
+    + Moved from Misc > HUD Options to its own tab under Misc.
+    + Will be disabled by default since it is known to cause random crashes to a small portion of users.
+    + It can still be manually enabled through the config window.
+    + A new "Performance" mode was added which has the clipping functionallity reduced in favor of FPS.
+    + Details on all the modes can be found in Misc > Window Clipping.
+- Added "Change Alpha Based on Range" options for Target, Target of Target and Focus Frames separated into Friendly and Enemy settings.
+
+Fixes:
+- Fixed "Change Alpha Based on Range" for Missing Health Color and Background Color on party frames.
+- Updated the pre-populated white list for the Custom Effects. Note that this will not update existing profiles.
+- Fixed Bard's Troubadour and Dancer's Shield Samba not being tracked correctly in some situations.
+- Fixed Dancer's Technical Finish not being tracked properly.
+
 # 0.6.3.4
 - Fixed window clipping not working.
 

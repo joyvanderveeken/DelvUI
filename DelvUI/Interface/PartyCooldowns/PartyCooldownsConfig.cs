@@ -17,7 +17,9 @@ namespace DelvUI.Interface.PartyCooldowns
     public enum PartyCooldownsGrowthDirection
     {
         Down = 0,
-        Up
+        Up,
+        Right,
+        Left
     }
 
     [Exportable(false)]
@@ -37,7 +39,7 @@ namespace DelvUI.Interface.PartyCooldowns
         [Order(4)]
         public bool Preview = false;
 
-        [Combo("Growth Direction", "Down", "Up", spacing = true)]
+        [Combo("Sections Growth Direction", "Down", "Up", "Right", "Left", spacing = true)]
         [Order(20)]
         public PartyCooldownsGrowthDirection GrowthDirection = PartyCooldownsGrowthDirection.Down;
 
@@ -156,10 +158,25 @@ namespace DelvUI.Interface.PartyCooldowns
 
             foreach (uint key in DefaultCooldowns.Keys)
             {
-                if (Cooldowns.Any(data => data.ActionId == key)) { continue; }
+                PartyCooldownData? data = Cooldowns.FirstOrDefault(data => data.ActionId == key);
+                PartyCooldownData defaultData = DefaultCooldowns[key];
 
-                Cooldowns.Add(DefaultCooldowns[key]);
-                needsSave = true;
+                if (data == null)
+                {
+                    Cooldowns.Add(defaultData);
+                }
+                else if (data != null && !data.Equals(defaultData))
+                {
+                    data.RequiredLevel = defaultData.RequiredLevel;
+                    data.JobId = defaultData.JobId;
+                    data.JobIds = defaultData.JobIds;
+                    data.Role = defaultData.Role;
+                    data.Roles = defaultData.Roles;
+                    data.CooldownDuration = defaultData.CooldownDuration;
+                    data.EffectDuration = defaultData.EffectDuration;
+
+                    needsSave = true;
+                }
             }
 
             ExcelSheet<Action>? sheet = Plugin.DataManager.GetExcelSheet<Action>();
@@ -226,7 +243,7 @@ namespace DelvUI.Interface.PartyCooldowns
                 ImGui.TableSetupColumn("Cooldown", ImGuiTableColumnFlags.WidthStretch, 10, 3);
                 ImGui.TableSetupColumn("Duration", ImGuiTableColumnFlags.WidthStretch, 10, 4);
                 ImGui.TableSetupColumn("Priority", ImGuiTableColumnFlags.WidthStretch, 22, 5);
-                ImGui.TableSetupColumn("Column", ImGuiTableColumnFlags.WidthStretch, 22, 6);
+                ImGui.TableSetupColumn("Section", ImGuiTableColumnFlags.WidthStretch, 22, 6);
 
                 ImGui.TableSetupScrollFreeze(0, 1);
                 ImGui.TableHeadersRow();
@@ -363,10 +380,10 @@ namespace DelvUI.Interface.PartyCooldowns
 
             // RANGED
             [118] = NewData(118, JobIDs.BRD, 50, 120, 15, 30, 3), // battle voice
-            [7405] = NewData(7405, JobIDs.BRD, 88, 90, 15, 70, 2), // troubadour
+            [7405] = NewData(7405, JobIDs.BRD, 62, 90, 15, 70, 2), // troubadour
             [7408] = NewData(7408, JobIDs.BRD, 66, 90, 15, 40, 2), // nature's minne
             [25785] = NewData(25785, JobIDs.BRD, 90, 110, 15, 30, 3), // radiant finale
-            [16012] = NewData(16012, JobIDs.DNC, 88, 90, 15, 70, 2), // shield samba
+            [16012] = NewData(16012, JobIDs.DNC, 56, 90, 15, 70, 2), // shield samba
             [16004] = NewData(16004, JobIDs.DNC, 70, 120, 20, 30, 3), // technical step / finish
             [16889] = NewData(16889, JobIDs.MCH, 56, 90, 15, 70, 2), // tactician
 
