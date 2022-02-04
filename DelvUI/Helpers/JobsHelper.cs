@@ -576,9 +576,9 @@ namespace DelvUI.Helpers
             [JobIDs.CUL] = "ó",
 
             // gatherers
-            [JobIDs.MIN] = "ö",
-            [JobIDs.BOT] = "ö",
-            [JobIDs.FSH] = "ö",
+            [JobIDs.MIN] = "ó",
+            [JobIDs.BOT] = "ó",
+            [JobIDs.FSH] = "ó",
         };
 
 

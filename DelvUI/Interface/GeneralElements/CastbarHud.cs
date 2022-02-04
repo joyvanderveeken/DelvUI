@@ -113,7 +113,7 @@ namespace DelvUI.Interface.GeneralElements
             bool isNameLeftAnchored = Config.CastNameLabel.TextAnchor is DrawAnchor.Left or DrawAnchor.TopLeft or DrawAnchor.BottomLeft;
             Vector2 namePos = Config.ShowIcon && isNameLeftAnchored ? startPos + new Vector2(iconSize.X, 0) : startPos;
             string? castName = LastUsedCast?.ActionText.CheckForUpperCase();
-            Config.CastNameLabel.SetText(Config.Preview ? "SKL:Cast Name" : "SKL:" + castName ?? "");
+            Config.CastNameLabel.SetText(Config.Preview ? "SKL: Cast Name" : "SKL: " + castName ?? "");
 
             AddDrawAction(Config.CastNameLabel.StrataLevel, () =>
             {
