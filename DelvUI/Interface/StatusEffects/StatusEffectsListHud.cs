@@ -9,6 +9,7 @@ using DelvUI.Interface.GeneralElements;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using LuminaStatus = Lumina.Excel.GeneratedSheets.Status;
 using StatusStruct = FFXIVClientStructs.FFXIV.Client.Game.Status;
@@ -101,10 +102,10 @@ namespace DelvUI.Interface.StatusEffects
         {
             var list = StatusEffectDataList(Actor);
 
-            // show mine first
-            if (Config.ShowMineFirst)
+            // show mine or permanent first
+            if (Config.ShowMineFirst || Config.ShowPermanentFirst)
             {
-                OrderByMineFirst(list);
+                return OrderByMineOrPermanentFirst(list);
             }
 
             return list;
@@ -235,37 +236,35 @@ namespace DelvUI.Interface.StatusEffects
             return buddy.ObjectId == status.SourceID;
         }
 
-        protected void OrderByMineFirst(List<StatusEffectData> list)
+        protected List<StatusEffectData> OrderByMineOrPermanentFirst(List<StatusEffectData> list)
         {
             var player = Plugin.ClientState.LocalPlayer;
             if (player == null)
             {
-                return;
+                return list;
             }
 
-            list.Sort((a, b) =>
+            if (Config.ShowMineFirst && Config.ShowPermanentFirst)
             {
-                bool isAFromPlayer = a.Status.SourceID == player.ObjectId;
-                bool isBFromPlayer = b.Status.SourceID == player.ObjectId;
+                return list.OrderByDescending(x => x.Status.SourceID == player.ObjectId && x.Data.IsPermanent || x.Data.IsFcBuff)
+                    .ThenByDescending(x => x.Status.SourceID == player.ObjectId)
+                    .ThenByDescending(x => x.Data.IsPermanent)
+                    .ThenByDescending(x => x.Data.IsFcBuff)
+                    .ToList();
+            }
+            else if (Config.ShowMineFirst && !Config.ShowPermanentFirst)
+            {
+                return list.OrderByDescending(x => x.Status.SourceID == player.ObjectId)
+                    .ToList();
+            }
+            else if (!Config.ShowMineFirst && Config.ShowPermanentFirst)
+            {
+                return list.OrderByDescending(x => x.Data.IsPermanent)
+                    .ThenByDescending(x => x.Data.IsFcBuff)
+                    .ToList();
+            }
 
-                if (Config.IncludePetAsOwn)
-                {
-                    isAFromPlayer |= IsStatusFromPlayerPet(a.Status);
-                    isBFromPlayer |= IsStatusFromPlayerPet(b.Status);
-                }
-
-                if (isAFromPlayer && !isBFromPlayer)
-                {
-                    return -1;
-                }
-
-                if (!isAFromPlayer && isBFromPlayer)
-                {
-                    return 1;
-                }
-
-                return 0;
-            });
+            return list;
         }
 
         public override void DrawChildren(Vector2 origin)
@@ -448,8 +447,8 @@ namespace DelvUI.Interface.StatusEffects
                 if (Config.ShowTooltips)
                 {
                     TooltipsHelper.Instance.ShowTooltipOnCursor(
-                        data.Data.Description.ToDalamudString().ToString(),
-                        data.Data.Name,
+                        MappedStatusDescription(data.Status.StatusID) ?? data.Data.Description.ToDalamudString().ToString(),
+                        MappedStatusName(data.Status.StatusID) ?? data.Data.Name,
                         data.Status.StatusID,
                         GetStatusActorName(data.Status)
                     );
@@ -572,6 +571,38 @@ namespace DelvUI.Interface.StatusEffects
             }
 
             return borderConfig;
+        }
+
+        private string? MappedStatusName(uint statusId)
+        {
+            return statusId switch
+            {
+                2800 => "Casting Chlamys",
+                2801 => "Elemental Resistance Down",
+                2802 => "Role Call",
+                2803 => "Miscast",
+                2804 => "Thornpricked",
+                2925 => "Acting DPS",
+                2926 => "Acting Healer",
+                2927 => "Acting Tank",
+                _ => null
+            };
+        }
+
+        private string? MappedStatusDescription(uint statusId)
+        {
+            return statusId switch
+            {
+                2800 => "Chlamys is replete with the cursed aether of one of three roles.",
+                2801 => "Resistance to all elements is reduced.",
+                2802 => "Cast as the receptable for cursed aether. Effect may be transferred by coming into contact with another player. When this effect expires, players of a certain role will take massive damage.",
+                2803 => "No longer subject to the effects of Role Call.",
+                2804 => "Flesh has been pierced by aetherial barbs. When this effect expires, the thorns' aether will disperse, resulting in attack damage.",
+                2925 => "When this effect expires, non-DPS will sustain heavy damage. However, being hit by certain attacks will remove this effect without the resulting damage.",
+                2926 => "When this effect expires, non-healers will sustain heavy damage. However, being hit by certain attacks will remove this effect without the resulting damage.",
+                2927 => "When this effect expires, non-tanks will sustain heavy damage. However, being hit by certain attacks will remove this effect without the resulting damage.",
+                _ => null
+            };
         }
 
         private void OnConfigPropertyChanged(object? sender, OnChangeBaseArgs args)

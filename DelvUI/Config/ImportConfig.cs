@@ -37,10 +37,19 @@ namespace DelvUI.Interface
 
             ImGui.InputText("", ref _importString, 999999);
 
-            ImGui.NewLine();
+            ImGui.Text("Here you can import specific parts of a profile.\nIf the string contains more than one part you will be able to select which parts you wish to import.");
+
             if (ImGui.Button("Import", new Vector2(560, 24)))
             {
                 _importing = _importString.Length > 0;
+            }
+
+            ImGuiHelper.DrawSeparator(1, 1);
+            ImGui.Text("To browse presets made by users of the DelvUI community, click the button below.");
+
+            if (ImGui.Button("DelvUI on wago.io", new Vector2(560, 24)))
+            {
+                Utils.OpenUrl("https://wago.io/delvui");
             }
 
             // error modal
