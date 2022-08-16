@@ -187,12 +187,12 @@ namespace DelvUI.Config.Profiles
             }
         }
 
-        public bool LoadCurrentProfile()
+        public bool LoadCurrentProfile(string oldProfile)
         {
             try
             {
                 var importString = File.ReadAllText(CurrentProfilePath());
-                return ConfigurationManager.Instance.ImportProfile(importString);
+                return ConfigurationManager.Instance.ImportProfile(oldProfile, _currentProfileName, importString);
             }
             catch (Exception e)
             {
@@ -269,7 +269,7 @@ namespace DelvUI.Config.Profiles
                 ChatHelper.SendChatMessage("/hudlayout " + currentProfile.HudLayout);
             }
 
-            if (!LoadCurrentProfile())
+            if (!LoadCurrentProfile(oldProfile))
             {
                 _currentProfileName = oldProfile;
                 return "Couldn't load profile \"" + profile + "\"!";
@@ -587,7 +587,7 @@ namespace DelvUI.Config.Profiles
                     _resetingProfileName = _currentProfileName;
                 }
                 ImGui.PopFont();
-                if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Reset"); }
+                ImGuiHelper.SetTooltip("Reset");
 
                 if (_currentProfileName != DefaultProfileName)
                 {
@@ -599,7 +599,7 @@ namespace DelvUI.Config.Profiles
                         _renamingProfileName = _currentProfileName;
                     }
                     ImGui.PopFont();
-                    if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Rename"); }
+                    ImGuiHelper.SetTooltip("Rename");
 
                     // delete
                     ImGui.SameLine();
@@ -609,7 +609,7 @@ namespace DelvUI.Config.Profiles
                         _deletingProfileName = _currentProfileName;
                     }
                     ImGui.PopFont();
-                    if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Delete"); }
+                    ImGuiHelper.SetTooltip("Delete");
                 }
 
                 // export to string

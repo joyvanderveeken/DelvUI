@@ -22,6 +22,7 @@ namespace DelvUI.Config
 {
     public delegate void ConfigurationManagerEventHandler(ConfigurationManager configurationManager);
     public delegate void StrataLevelsEventHandler(ConfigurationManager configurationManager, PluginConfigObject config);
+    public delegate void GlobalVisibilityEventHandler(ConfigurationManager configurationManager, VisibilityConfig config);
 
     public class ConfigurationManager : IDisposable
     {
@@ -30,6 +31,7 @@ namespace DelvUI.Config
         public readonly TextureWrap? BannerImage;
 
         private BaseNode _configBaseNode;
+        private Dictionary<string, BaseNode> _configBaseNodeByProfile;
         public BaseNode ConfigBaseNode
         {
             get => _configBaseNode;
@@ -54,6 +56,15 @@ namespace DelvUI.Config
             {
                 var config = Instance.GetConfigObject<MiscColorConfig>();
                 return config != null ? config.GradientDirection : GradientDirection.None;
+            }
+        }
+
+        public bool OverrideDalamudStyle
+        {
+            get
+            {
+                var config = Instance.GetConfigObject<HUDOptionsConfig>();
+                return config != null ? config.OverrideDalamudStyle : true;
             }
         }
 
@@ -94,12 +105,14 @@ namespace DelvUI.Config
         public event ConfigurationManagerEventHandler? LockEvent;
         public event ConfigurationManagerEventHandler? ConfigClosedEvent;
         public event StrataLevelsEventHandler? StrataLevelsChangedEvent;
+        public event GlobalVisibilityEventHandler? GlobalVisibilityEvent;
 
         public ConfigurationManager()
         {
             BannerImage = Plugin.BannerTexture;
             ConfigDirectory = Plugin.PluginInterface.GetPluginConfigDirectory();
 
+            _configBaseNodeByProfile = new Dictionary<string, BaseNode>();
             _configBaseNode = new BaseNode();
             InitializeBaseNode(_configBaseNode);
             _configBaseNode.ConfigObjectResetEvent += OnConfigObjectReset;
@@ -239,6 +252,13 @@ namespace DelvUI.Config
         }
         #endregion
 
+        #region visibility
+        public void OnGlobalVisibilityChanged(VisibilityConfig config)
+        {
+            GlobalVisibilityEvent?.Invoke(this, config);
+        }
+        #endregion
+
         #region windows
         public void ToggleConfigWindow()
         {
@@ -361,15 +381,43 @@ namespace DelvUI.Config
             return ConfigBaseNode.GetBase64String();
         }
 
-        public bool ImportProfile(string rawString)
+        public bool ImportProfile(string oldProfileName, string profileName, string rawString)
+        {
+            // cache old profile
+            _configBaseNodeByProfile[oldProfileName] = ConfigBaseNode;
+
+            // load profile from cache or from rawString
+            if (!_configBaseNodeByProfile.TryGetValue(profileName, out BaseNode? maybeNode)
+                && !ImportProfileNonCached(rawString, out maybeNode))
+            {
+                return false;
+            }
+
+            BaseNode node = maybeNode!;
+            if (IsConfigWindowOpened || string.IsNullOrEmpty(node.SelectedOptionName))
+            {
+                node.SelectedOptionName = ConfigBaseNode.SelectedOptionName;
+                node.RefreshSelectedNode();
+            }
+
+            ConfigBaseNode.ConfigObjectResetEvent -= OnConfigObjectReset;
+            ConfigBaseNode = node;
+            ConfigBaseNode.ConfigObjectResetEvent += OnConfigObjectReset;
+
+            ResetEvent?.Invoke(this);
+
+            return true;
+        }
+
+        private bool ImportProfileNonCached(string rawString, out BaseNode? node)
         {
             List<string> importStrings = new List<string>(rawString.Trim().Split(new string[] { "|" }, StringSplitOptions.RemoveEmptyEntries));
             ImportData[] imports = importStrings.Select(str => new ImportData(str)).ToArray();
 
-            BaseNode node = new BaseNode();
+            node = new BaseNode();
             InitializeBaseNode(node);
 
-            Dictionary<Type, PluginConfigObject> OldConfigObjects = new Dictionary<Type, PluginConfigObject>();
+            Dictionary<Type, PluginConfigObject> oldConfigObjects = new Dictionary<Type, PluginConfigObject>();
 
             foreach (ImportData importData in imports)
             {
@@ -381,7 +429,7 @@ namespace DelvUI.Config
 
                 if (!node.SetConfigObject(config))
                 {
-                    OldConfigObjects.Add(config.GetType(), config);
+                    oldConfigObjects.Add(config.GetType(), config);
                 }
             }
 
@@ -398,7 +446,7 @@ namespace DelvUI.Config
 
                         if (config != null)
                         {
-                            config.ImportFromOldVersion(OldConfigObjects, CurrentVersion, PreviousVersion);
+                            config.ImportFromOldVersion(oldConfigObjects, CurrentVersion, PreviousVersion);
                             node.SetConfigObject(config); // needed to refresh nodes
                         }
                     }
@@ -411,19 +459,10 @@ namespace DelvUI.Config
                 return false;
             }
 
-            string? oldSelection = ConfigBaseNode.SelectedOptionName;
-            node.SelectedOptionName = oldSelection;
-
             if (ProfilesManager.Instance != null)
             {
                 node.AddExtraSectionNode(ProfilesManager.Instance.ProfilesNode);
             }
-
-            ConfigBaseNode.ConfigObjectResetEvent -= OnConfigObjectReset;
-            ConfigBaseNode = node;
-            ConfigBaseNode.ConfigObjectResetEvent += OnConfigObjectReset;
-
-            ResetEvent?.Invoke(this);
 
             return true;
         }
@@ -524,6 +563,9 @@ namespace DelvUI.Config
             typeof(CastersColorConfig),
             typeof(RolesColorConfig),
             typeof(MiscColorConfig),
+
+            typeof(GlobalVisibilityConfig),
+            typeof(HotbarsVisibilityConfig),
 
             typeof(FontsConfig),
             typeof(HUDOptionsConfig),

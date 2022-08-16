@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Utility;
@@ -16,9 +16,10 @@ using StatusStruct = FFXIVClientStructs.FFXIV.Client.Game.Status;
 
 namespace DelvUI.Interface.StatusEffects
 {
-    public class StatusEffectsListHud : ParentAnchoredDraggableHudElement, IHudElementWithActor, IHudElementWithAnchorableParent, IHudElementWithPreview, IHudElementWithMouseOver
+    public class StatusEffectsListHud : ParentAnchoredDraggableHudElement, IHudElementWithActor, IHudElementWithAnchorableParent, IHudElementWithPreview, IHudElementWithMouseOver, IHudElementWithVisibilityConfig
     {
         protected StatusEffectsListConfig Config => (StatusEffectsListConfig)_config;
+        public VisibilityConfig? VisibilityConfig => Config is UnitFrameStatusEffectsListConfig config ? config.VisibilityConfig : null;
 
         private LayoutInfo _layoutInfo;
 
@@ -293,6 +294,12 @@ namespace DelvUI.Interface.StatusEffects
             // no need to do anything else if there are no effects
             if (list.Count == 0)
             {
+                if (_wasHovering && NeedsSpecialInput)
+                {
+                    _wasHovering = false;
+                    InputsHelper.Instance.StopHandlingInputs();
+                }
+
                 return;
             }
 
@@ -362,6 +369,16 @@ namespace DelvUI.Interface.StatusEffects
                     {
                         var iconPos = iconPositions[i];
                         var statusEffectData = list[i];
+
+                        // shadow
+                        if (Config.IconConfig.ShadowConfig! != null && Config.IconConfig.ShadowConfig.Enabled)
+                        {
+                            // Right Side
+                            drawList.AddRectFilled(iconPos + new Vector2(Config.IconConfig.Size.X, Config.IconConfig.ShadowConfig.Offset), iconPos + Config.IconConfig.Size + new Vector2(Config.IconConfig.ShadowConfig.Offset, Config.IconConfig.ShadowConfig.Offset) + new Vector2(Config.IconConfig.ShadowConfig.Thickness - 1, Config.IconConfig.ShadowConfig.Thickness - 1), Config.IconConfig.ShadowConfig.Color.Base);
+
+                            // Bottom Size
+                            drawList.AddRectFilled(iconPos + new Vector2(Config.IconConfig.ShadowConfig.Offset, Config.IconConfig.Size.Y), iconPos + Config.IconConfig.Size + new Vector2(Config.IconConfig.ShadowConfig.Offset, Config.IconConfig.ShadowConfig.Offset) + new Vector2(Config.IconConfig.ShadowConfig.Thickness - 1, Config.IconConfig.ShadowConfig.Thickness - 1), Config.IconConfig.ShadowConfig.Color.Base);
+                        }
 
                         // icon
                         var cropIcon = Config.IconConfig.CropIcon;
@@ -447,8 +464,8 @@ namespace DelvUI.Interface.StatusEffects
                 if (Config.ShowTooltips)
                 {
                     TooltipsHelper.Instance.ShowTooltipOnCursor(
-                        MappedStatusDescription(data.Status.StatusID) ?? data.Data.Description.ToDalamudString().ToString(),
-                        MappedStatusName(data.Status.StatusID) ?? data.Data.Name,
+                        EncryptedStringsHelper.GetStatusDescriptionString(data.Status.StatusID) ?? data.Data.Description.ToDalamudString().ToString(),
+                        EncryptedStringsHelper.GetStatusNameString(data.Status.StatusID) ?? data.Data.Name,
                         data.Status.StatusID,
                         GetStatusActorName(data.Status)
                     );
@@ -571,38 +588,6 @@ namespace DelvUI.Interface.StatusEffects
             }
 
             return borderConfig;
-        }
-
-        private string? MappedStatusName(uint statusId)
-        {
-            return statusId switch
-            {
-                2800 => "Casting Chlamys",
-                2801 => "Elemental Resistance Down",
-                2802 => "Role Call",
-                2803 => "Miscast",
-                2804 => "Thornpricked",
-                2925 => "Acting DPS",
-                2926 => "Acting Healer",
-                2927 => "Acting Tank",
-                _ => null
-            };
-        }
-
-        private string? MappedStatusDescription(uint statusId)
-        {
-            return statusId switch
-            {
-                2800 => "Chlamys is replete with the cursed aether of one of three roles.",
-                2801 => "Resistance to all elements is reduced.",
-                2802 => "Cast as the receptable for cursed aether. Effect may be transferred by coming into contact with another player. When this effect expires, players of a certain role will take massive damage.",
-                2803 => "No longer subject to the effects of Role Call.",
-                2804 => "Flesh has been pierced by aetherial barbs. When this effect expires, the thorns' aether will disperse, resulting in attack damage.",
-                2925 => "When this effect expires, non-DPS will sustain heavy damage. However, being hit by certain attacks will remove this effect without the resulting damage.",
-                2926 => "When this effect expires, non-healers will sustain heavy damage. However, being hit by certain attacks will remove this effect without the resulting damage.",
-                2927 => "When this effect expires, non-tanks will sustain heavy damage. However, being hit by certain attacks will remove this effect without the resulting damage.",
-                _ => null
-            };
         }
 
         private void OnConfigPropertyChanged(object? sender, OnChangeBaseArgs args)

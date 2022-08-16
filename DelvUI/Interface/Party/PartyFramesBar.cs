@@ -50,7 +50,7 @@ namespace DelvUI.Interface.Party
 
             _nameLabelHud = new LabelHud(_configs.HealthBar.NameLabelConfig);
             _healthLabelHud = new LabelHud(_configs.HealthBar.HealthLabelConfig);
-            _orderLabelHud = new LabelHud(_configs.HealthBar.OrderLabelConfig);
+            _orderLabelHud = new LabelHud(_configs.HealthBar.OrderNumberConfig);
             _statusLabelHud = new LabelHud(PlayerStatus.Label);
             _raiseLabelHud = new LabelHud(RaiseTracker.Icon.Label);
             _invulnLabelHud = new LabelHud(InvulnTracker.Icon.Label);
@@ -82,7 +82,7 @@ namespace DelvUI.Interface.Party
             {
                 if (_configs.HealthBar.ColorsConfig.ColorByHealth.UseJobColorAsMaxHealth)
                 {
-                    return Utils.GetColorByScale(scale, _configs.HealthBar.ColorsConfig.ColorByHealth.LowHealthColorThreshold / 100f, _configs.HealthBar.ColorsConfig.ColorByHealth.FullHealthColorThreshold / 100f, _configs.HealthBar.ColorsConfig.ColorByHealth.LowHealthColor, _configs.HealthBar.ColorsConfig.ColorByHealth.FullHealthColor, 
+                    return Utils.GetColorByScale(scale, _configs.HealthBar.ColorsConfig.ColorByHealth.LowHealthColorThreshold / 100f, _configs.HealthBar.ColorsConfig.ColorByHealth.FullHealthColorThreshold / 100f, _configs.HealthBar.ColorsConfig.ColorByHealth.LowHealthColor, _configs.HealthBar.ColorsConfig.ColorByHealth.FullHealthColor,
                         GlobalColors.Instance.SafeColorForJobId(Member.JobId), _configs.HealthBar.ColorsConfig.ColorByHealth.UseMaxHealthColor, _configs.HealthBar.ColorsConfig.ColorByHealth.BlendMode);
                 }
                 else if (_configs.HealthBar.ColorsConfig.ColorByHealth.UseRoleColorAsMaxHealth)
@@ -231,7 +231,8 @@ namespace DelvUI.Interface.Party
                 thickness,
                 actor: character,
                 current: currentHp,
-                max: maxHp
+                max: maxHp,
+                shadowConfig: _configs.HealthBar.ShadowConfig
             );
 
             bar.SetBackground(background);
@@ -292,7 +293,8 @@ namespace DelvUI.Interface.Party
             }
 
             // highlight
-            if (_configs.HealthBar.ColorsConfig.ShowHighlight && isHovering)
+            bool isSoftTarget = character != null && character == Plugin.TargetManager.SoftTarget;
+            if (_configs.HealthBar.ColorsConfig.ShowHighlight && (isHovering || isSoftTarget))
             {
                 Rect highlight = new Rect(Position, _configs.HealthBar.Size, _configs.HealthBar.ColorsConfig.HighlightColor);
                 bar.AddForegrounds(highlight);
@@ -344,6 +346,8 @@ namespace DelvUI.Interface.Party
             }
 
             var character = Member.Character;
+            
+            
 
             // role/job icon
             if (RoleIcon.Enabled)
@@ -502,8 +506,14 @@ namespace DelvUI.Interface.Party
                 {
                     drawName = false;
                 }
+                {
+                    drawName = false;
+                }
             }
             else if (PlayerStatus.Enabled && PlayerStatus.HideName && Member.Status != PartyMemberStatus.None)
+            {
+                drawName = false;
+            }else if (character is BattleChara { IsCasting: true } && _configs.CastBar.HideNameWhenCasting)
             {
                 drawName = false;
             }
@@ -530,11 +540,12 @@ namespace DelvUI.Interface.Party
             // order
             if (character == null || character?.ObjectKind != ObjectKind.BattleNpc)
             {
-                var order = Member.ObjectId == player.ObjectId ? 1 : Member.Order;
+                int order = Member.ObjectId == player.ObjectId ? 1 : Member.Order;
+                string str = char.ConvertFromUtf32(0xE090 + order - 1).ToString();
 
-                drawActions.Add((_configs.HealthBar.OrderLabelConfig.StrataLevel, () =>
+                drawActions.Add((_configs.HealthBar.OrderNumberConfig.StrataLevel, () =>
                 {
-                    _configs.HealthBar.OrderLabelConfig.SetText("[" + order + "]");
+                    _configs.HealthBar.OrderNumberConfig.SetText(str);
                     _orderLabelHud.Draw(Position, _configs.HealthBar.Size);
                 }
                 ));

@@ -1,4 +1,4 @@
-﻿using Dalamud.Interface;
+using Dalamud.Interface;
 using DelvUI.Config;
 using DelvUI.Config.Attributes;
 using DelvUI.Enums;
@@ -162,6 +162,9 @@ namespace DelvUI.Interface.StatusEffects
         [Order(17, collapseWith = nameof(AnchorToUnitFrame))]
         public DrawAnchor UnitFrameAnchor = DrawAnchor.TopLeft;
 
+        [NestedConfig("Visibility", 200)]
+        public VisibilityConfig VisibilityConfig = new VisibilityConfig();
+
         public UnitFrameStatusEffectsListConfig(Vector2 position, Vector2 size, bool showBuffs, bool showDebuffs, bool showPermanentEffects,
             GrowthDirections growthDirections, StatusEffectIconConfig iconConfig)
             : base(position, size, showBuffs, showDebuffs, showPermanentEffects, growthDirections, iconConfig)
@@ -302,6 +305,9 @@ namespace DelvUI.Interface.StatusEffects
         [NestedConfig("Border", 25, collapseWith = nameof(CropIcon), collapsingHeader = false)]
         public StatusEffectIconBorderConfig BorderConfig = new();
 
+        [NestedConfig("Shadow", 26, collapseWith = nameof(CropIcon), collapsingHeader = false)]
+        public ShadowConfig ShadowConfig = new ShadowConfig() { Enabled = false };
+
         [NestedConfig("Dispellable Effects Border", 30, collapseWith = nameof(CropIcon), collapsingHeader = false)]
         public StatusEffectIconBorderConfig DispellableBorderConfig = new(new PluginConfigColor(new Vector4(141f / 255f, 206f / 255f, 229f / 255f, 100f / 100f)), 2);
 
@@ -355,7 +361,7 @@ namespace DelvUI.Interface.StatusEffects
             var config = new LabelConfig(new Vector2(16, -11), "", DrawAnchor.Center, DrawAnchor.Center);
             config.Color = new(Vector4.UnitW);
             config.OutlineColor = new(Vector4.One);
-            config.ShadowColor = new(Vector4.One);
+            config.ShadowConfig.Color = new(Vector4.One);
 
             return config;
         }
@@ -552,7 +558,7 @@ namespace DelvUI.Interface.StatusEffects
                     ImGui.OpenPopup("export_succes_popup");
                 }
                 ImGui.PopFont();
-                if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Export List to Clipboard"); }
+                ImGuiHelper.SetTooltip("Export List to Clipboard");
 
                 // export success popup
                 if (ImGui.BeginPopup("export_succes_popup"))
@@ -569,7 +575,7 @@ namespace DelvUI.Interface.StatusEffects
                     _importString = ImGui.GetClipboardText();
                 }
                 ImGui.PopFont();
-                if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Import List from Clipboard"); }
+                ImGuiHelper.SetTooltip("Import List from Clipboard");
 
                 // clear
                 ImGui.SameLine();
@@ -579,7 +585,7 @@ namespace DelvUI.Interface.StatusEffects
                     _clearingList = true;
                 }
                 ImGui.PopFont();
-                if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Clear List"); }
+                ImGuiHelper.SetTooltip("Clear List");
 
                 ImGui.Text("\u2002 \u2002");
                 ImGui.SameLine();

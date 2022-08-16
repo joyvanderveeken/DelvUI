@@ -55,8 +55,8 @@ namespace DelvUI.Interface.EnemyList
         [NestedConfig("Health Label", 80)]
         public EditableLabelConfig HealthLabel = new EditableLabelConfig(new Vector2(30, 0), "[health:percent]%", DrawAnchor.Left, DrawAnchor.Left);
 
-        [NestedConfig("Order Letter Label", 90)]
-        public LabelConfig OrderLetterLabel = new LabelConfig(new Vector2(5, 0), "", DrawAnchor.Left, DrawAnchor.Left);
+        [NestedConfig("Order Label", 90)]
+        public DefaultFontLabelConfig OrderLabel = new DefaultFontLabelConfig(new Vector2(5, 0), "", DrawAnchor.Left, DrawAnchor.Left);
 
         [NestedConfig("Colors", 100)]
         public EnemyListHealthBarColorsConfig Colors = new EnemyListHealthBarColorsConfig();
@@ -79,7 +79,6 @@ namespace DelvUI.Interface.EnemyList
 
             config.NameLabel.FontID = FontsConfig.DefaultMediumFontKey;
             config.HealthLabel.FontID = FontsConfig.DefaultMediumFontKey;
-            config.OrderLetterLabel.FontID = FontsConfig.DefaultMediumFontKey;
 
             config.MouseoverAreaConfig.Enabled = false;
 
@@ -99,7 +98,7 @@ namespace DelvUI.Interface.EnemyList
         [NestedConfig("Color Based On Health Value", 30, collapsingHeader = false)]
         public ColorByHealthValueConfig ColorByHealth = new ColorByHealthValueConfig();
 
-        [Checkbox("Highlight When Hovering With Cursor", spacing = true)]
+        [Checkbox("Highlight When Hovering With Cursor Or Soft Targeting", spacing = true)]
         [Order(40)]
         public bool ShowHighlight = true;
 

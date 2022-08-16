@@ -1,3 +1,113 @@
+# 1.3.1.0
+Features:
+- Added a setting to hide the player name while casting on the Party Frames.
+- Added shadow options to all bars and added shadow thickness for labels:
+  + Due to these changes, all labels' shadow settings will be reset.
+
+Fixes:
+- Blood Weapon and Delirium fill directions now follow the correct direction.
+
+# 1.3.0.0
+- Attempt to fix "seemingly random" crashes (mostly related to Window Clipping).
+
+# 1.2.1.0
+Features:
+- Added "Hide when in duty" option to Visibility settings.
+- Added an icon to the experience bar that shows when the player is in a sanctuary.
+- Order Labels for Party Frames and Enemy List now uses the same symbols from the game:
+    + This means it will no longer be a text like '[A]' or '[1]'.
+    + These labels will no longer use a custom font, instead theres a Scale setting to make them bigger.
+    + Due to these changes, these label's settings will be reset.
+- Reworked Monk's Forms bar:
+    + It now uses chunks for the 3 forms.
+    + A different color can be assigned for each form and also Formless Fist.
+    + When Formless Fist is active, it will show a progress bar with the duration of the buff instead of the chunks.
+    + Due to these changes, the settings for this bar will be reset.
+
+Fixes:
+- Fixed cooldown for Troubadour, Shield Samba and Tactician in Party Cooldowns:
+    + It now adapts to the level of each player to account for the level 88 trait that reduces the cooldown from 120s to 90s.
+    + The cooldown will now read as "90-120" in the list for these actions.
+- Fixed hotbar commands being spammed while doing PvP.
+
+# 1.2.0.1
+Fixes:
+- Fixed DelVUI sometimes crashing on startup.
+- Fixed hotbar commands being spammed in the chat.
+
+# 1.2.0.0
+Features:
+- Completely reworked visibility options for DelvUI elements and the game's hotbars:
+    + Most DelvUI elements now have their own visibility settings and can be changed individually.
+    + A global setting can be applied to all elements in 'Visibility > Global'.
+    + Hotbar visibility settings were moved from 'Misc > HUD Options' to 'Visibility > Hotbars'.
+    + Due to the change in the structure, all visibility related settings will be reset.
+- Updated the main config window so it adapts better to higher Dalamud Global Font Scales.
+- Added a setting to prevent DelvUI from overriding the global Dalamud style (Misc > HUD Options > Use DelvUI style).
+
+Fixes:
+- Fixed tooltips still sometimes not working properly with high Dalamud Global Font Scales.
+
+# 1.1.5.0
+Fixes:
+- Fixed tooltips not working properly with high Dalamud Global Font Scales.
+
+# 1.1.4.1
+Fixes:
+- Fixed DelvUI not loading.
+
+# 1.1.4.0
+Fixes:
+- Fixed mouse cursor sometimes becoming unresponsive on certain Window Clipping settings.
+
+# 1.1.3.0
+Fixes:
+- Fixed actions and status effects names in Dragonsong's Reprise.
+- Fixed cast times being inaccurate for some abilities in Dragonsong's Reprise and other encounters.
+
+# 1.1.2.0
+Features:
+- Improved performance when switching profiles in some situations.
+- Added sub-setting to show when crafting when DelvUI is hidden out of combat.
+- Gathering nodes integrity will be shown as health in the target unit frame:
+    + This DOES NOT include text tags support.
+    + Only the health bar will reflect the integrity, no health values will be visible in the labels.
+
+Fixes:
+- Fixed Addersting Bar stacks appearing full when below level 66.
+- Fixed unintentional delay when hiding the target castbar after a successful cast.
+
+# 1.1.1.1
+- Fixed mouse inputs sometimes getting stuck (bug introduced in v1.1.1.0).
+
+# 1.1.1.0
+Features:
+- Added support for in-game fonts.
+- Added support for soft targeting in the Party Frames and Enemy List (units can be highlighted when soft targeting them).
+- Changed Dark Knight's Blood Weapon Bar to a chunked bar to reflect the changes in patch 6.1.
+
+Fixes: 
+- Fixed several game windows not being covered by DelvUI elements with Window Clipping enabled.
+- Fixed Party Cooldowns not resetting on a wipe.
+- Fixed Flourish buffs not working properly for Dancer.
+
+# 1.1.0.0
+Features:
+- Updated for patch 6.1 support.
+- DelvUI option was removed from the in-game system menu:
+    + This feature used to conflict with Dalamud's system menu options which was not ideal.
+    + We ran into some issues with this feature and were not really comfortable with the way it was implemented so we decided to remove it.
+    + You can use "/delvui" to access the config window. We might add a shorter alias for this command in the future for convenience.
+
+Fixes:
+- Fixed party sorting for Trust and Command Missisons parties.
+- Fixed party leader icon for Trust and Command Missisons parties.
+
+# 1.0.1.3
+Fixes:
+- Fixed the duration of Dancer Flourishing buffs.
+- Fixed Dancer "Fan Dance III" proc not showing on the Feather Gauge if "Hide When Inactive" was selected and no other feathers were available.
+
 # 1.0.1.2
 Features:
 - Added Partial Fill Color options for Sages' "Addersgall" bar and White Mages' "Lily" bar.

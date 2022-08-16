@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Dalamud.Game.ClientState.Objects;
 
 namespace DelvUI.Interface.EnemyList
 {
@@ -45,7 +46,7 @@ namespace DelvUI.Interface.EnemyList
 
             _nameLabelHud = new LabelHud(Configs.HealthBar.NameLabel);
             _healthLabelHud = new LabelHud(Configs.HealthBar.HealthLabel);
-            _orderLabelHud = new LabelHud(Configs.HealthBar.OrderLetterLabel);
+            _orderLabelHud = new LabelHud(Configs.HealthBar.OrderLabel);
 
             _castbarHud = new TargetCastbarHud(Configs.CastBar);
             _buffsListHud = new StatusEffectsListHud(Configs.Buffs);
@@ -178,8 +179,9 @@ namespace DelvUI.Interface.EnemyList
 
                 // highlight
                 var (areaStart, areaEnd) = Configs.HealthBar.MouseoverAreaConfig.GetArea(origin + pos, Configs.HealthBar.Size);
-                bool isHovering = ImGui.IsMouseHoveringRect(areaStart, areaEnd);
-                if (isHovering)
+                bool isHovering = character != null && ImGui.IsMouseHoveringRect(areaStart, areaEnd);
+                bool isSoftTarget = character != null && character == Plugin.TargetManager.SoftTarget;
+                if (isHovering || isSoftTarget)
                 {
                     if (Configs.HealthBar.Colors.ShowHighlight)
                     {
@@ -188,7 +190,7 @@ namespace DelvUI.Interface.EnemyList
                     }
 
                     mouseoverTarget = character;
-                    hovered = true;
+                    hovered = isHovering;
                 }
 
                 AddDrawActions(bar.GetDrawActions(origin, Configs.HealthBar.StrataLevel));
@@ -237,10 +239,16 @@ namespace DelvUI.Interface.EnemyList
                     _healthLabelHud.Draw(origin + pos, Configs.HealthBar.Size, character, name, currentHp, maxHp);
                 });
 
-                string letter = Config.Preview || _helper.EnemiesData.ElementAt(i).Letter == null ? ((char)(i + 65)).ToString() : _helper.EnemiesData.ElementAt(i).Letter!;
-                AddDrawAction(Configs.HealthBar.OrderLetterLabel.StrataLevel, () =>
+                int letter = i;
+                if (!Config.Preview && _helper.EnemiesData.ElementAt(i).LetterIndex.HasValue)
                 {
-                    Configs.HealthBar.OrderLetterLabel.SetText($"[{letter}]");
+                    letter = _helper.EnemiesData.ElementAt(i).LetterIndex!.Value;
+                }
+
+                string str = char.ConvertFromUtf32(0xE071 + letter).ToString();
+                AddDrawAction(Configs.HealthBar.OrderLabel.StrataLevel, () =>
+                {
+                    Configs.HealthBar.OrderLabel.SetText(str);
                     _orderLabelHud.Draw(origin + pos, Configs.HealthBar.Size);
                 });
 
@@ -303,7 +311,7 @@ namespace DelvUI.Interface.EnemyList
 
         private PluginConfigColor GetBorderColor(Character? character, int enmityLevel)
         {
-            GameObject? target = Plugin.TargetManager.Target ?? Plugin.TargetManager.SoftTarget;
+            GameObject? target = Plugin.TargetManager.Target;
             if (character != null && character == target)
             {
                 return Configs.HealthBar.Colors.TargetBordercolor;
@@ -324,7 +332,7 @@ namespace DelvUI.Interface.EnemyList
 
         private int GetBorderThickness(Character? character)
         {
-            GameObject? target = Plugin.TargetManager.Target ?? Plugin.TargetManager.SoftTarget;
+            GameObject? target = Plugin.TargetManager.Target;
             if (character != null && character == target)
             {
                 return Configs.HealthBar.Colors.TargetBorderThickness;

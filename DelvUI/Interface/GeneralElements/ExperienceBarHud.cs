@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Interface;
 using DelvUI.Config;
 using DelvUI.Helpers;
 using DelvUI.Interface.Bars;
@@ -7,15 +8,21 @@ using System.Numerics;
 
 namespace DelvUI.Interface.GeneralElements
 {
-    public class ExperienceBarHud : DraggableHudElement, IHudElementWithActor
+    public class ExperienceBarHud : DraggableHudElement, IHudElementWithActor, IHudElementWithVisibilityConfig
     {
         private ExperienceBarConfig Config => (ExperienceBarConfig)_config;
+        public VisibilityConfig VisibilityConfig => Config.VisibilityConfig;
 
         public GameObject? Actor { get; set; } = null;
 
         private ExperienceHelper _helper = new ExperienceHelper();
+        private IconLabelHud _sanctuaryLabel;
 
-        public ExperienceBarHud(ExperienceBarConfig config, string displayName) : base(config, displayName) { }
+        public ExperienceBarHud(ExperienceBarConfig config, string displayName) : base(config, displayName)
+        {
+            Config.SanctuaryLabel.IconId = FontAwesomeIcon.Moon;
+            _sanctuaryLabel = new IconLabelHud(Config.SanctuaryLabel);
+        }
 
         protected override (List<Vector2>, List<Vector2>) ChildrenPositionsAndSizes()
         {
@@ -47,6 +54,25 @@ namespace DelvUI.Interface.GeneralElements
             bar.AddLabels(Config.LeftLabel, Config.RightLabel);
 
             AddDrawActions(bar.GetDrawActions(origin, Config.StrataLevel));
+
+            // sanctuary icon
+            if (IsInSanctuary())
+            {
+                AddDrawAction(Config.SanctuaryLabel.StrataLevel, () =>
+                {
+                    var pos = Utils.GetAnchoredPosition(origin, Config.Size, Config.Anchor);
+                    _sanctuaryLabel.Draw(pos + Config.Position, Config.Size, Actor);
+                });
+            }
+        }
+
+        private unsafe bool IsInSanctuary()
+        {
+            AddonExp* addon = ExperienceHelper.Instance.GetExpAddon();
+            if (addon == null) { return false; }
+            if (addon->AtkUnitBase.UldManager.NodeListCount < 4) { return false; }
+
+            return addon->AtkUnitBase.UldManager.NodeList[4]->IsVisible;
         }
     }
 }

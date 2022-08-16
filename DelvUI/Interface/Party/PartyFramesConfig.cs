@@ -61,6 +61,9 @@ namespace DelvUI.Interface.Party
         [Checkbox("Show Chocobo", isMonitored = true)]
         [Order(55)]
         public bool ShowChocobo = true;
+
+        [NestedConfig("Visibility", 200)]
+        public VisibilityConfig VisibilityConfig = new VisibilityConfig();
     }
 
     [Exportable(false)]
@@ -88,8 +91,8 @@ namespace DelvUI.Interface.Party
         [NestedConfig("Health Label", 45)]
         public EditableLabelConfig HealthLabelConfig = new EditableLabelConfig(Vector2.Zero, "[health:current-short]", DrawAnchor.Right, DrawAnchor.Right);
 
-        [NestedConfig("Order Position Label", 50)]
-        public LabelConfig OrderLabelConfig = new LabelConfig(new Vector2(2, 4), "[name:first-initial]. [name:last-initial].", DrawAnchor.TopLeft, DrawAnchor.TopLeft);
+        [NestedConfig("Order Label", 50)]
+        public DefaultFontLabelConfig OrderNumberConfig = new DefaultFontLabelConfig(new Vector2(2, 4), "", DrawAnchor.TopLeft, DrawAnchor.TopLeft);
 
         [NestedConfig("Colors", 55)]
         public PartyFramesColorsConfig ColorsConfig = new PartyFramesColorsConfig();
@@ -186,7 +189,7 @@ namespace DelvUI.Interface.Party
         [NestedConfig("Color Based On Health Value", 30, collapsingHeader = false)]
         public ColorByHealthValueConfig ColorByHealth = new ColorByHealthValueConfig();
 
-        [Checkbox("Highlight When Hovering With Cursor", spacing = true)]
+        [Checkbox("Highlight When Hovering With Cursor Or Soft Targeting", spacing = true)]
         [Order(40)]
         public bool ShowHighlight = true;
 
@@ -365,6 +368,10 @@ namespace DelvUI.Interface.Party
 
             return config;
         }
+
+        [Checkbox("Hide Name When Casting")]
+        [Order(6)]
+        public bool HideNameWhenCasting = false;
 
         [Anchor("Health Bar Anchor")]
         [Order(16)]

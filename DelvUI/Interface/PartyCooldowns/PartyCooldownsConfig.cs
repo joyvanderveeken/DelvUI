@@ -58,6 +58,9 @@ namespace DelvUI.Interface.PartyCooldowns
         [Checkbox("Show When Solo", isMonitored = true)]
         [Order(21)]
         public bool ShowWhenSolo = false;
+
+        [NestedConfig("Visibility", 200)]
+        public VisibilityConfig VisibilityConfig = new VisibilityConfig();
     }
 
     [Disableable(false)]
@@ -194,6 +197,13 @@ namespace DelvUI.Interface.PartyCooldowns
                     cooldown.CooldownDuration = action.Recast100ms / 10;
                 }
 
+                // not happy about this but didn't want to over-complicate things
+                // special case for troubadour, shield samba and tactician
+                if (cooldown.ActionId == 7405 || cooldown.ActionId == 16012 || cooldown.ActionId == 16889)
+                {
+                    cooldown.OverriddenCooldownText = "90-120";
+                }
+
                 cooldown.IconId = action.Icon;
                 cooldown.Name = action.Name;
             }
@@ -288,7 +298,8 @@ namespace DelvUI.Interface.PartyCooldowns
                     // cooldown
                     if (ImGui.TableSetColumnIndex(3))
                     {
-                        ImGui.Text($"{cooldown.CooldownDuration}");
+                        string cooldownText = cooldown.OverriddenCooldownText != null ? cooldown.OverriddenCooldownText : $"{cooldown.EffectDuration}";
+                        ImGui.Text(cooldownText);
                     }
 
                     // duration
@@ -309,7 +320,7 @@ namespace DelvUI.Interface.PartyCooldowns
                             CooldownsDataChangedEvent?.Invoke(this);
                         }
 
-                        if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Priority determines which cooldows show first on the list."); }
+                        ImGuiHelper.SetTooltip("Priority determines which cooldows show first on the list.");
                     }
 
                     // column
@@ -324,7 +335,7 @@ namespace DelvUI.Interface.PartyCooldowns
                             CooldownsDataChangedEvent?.Invoke(this);
                         }
 
-                        if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Allows to separate cooldowns in different columns."); }
+                        ImGuiHelper.SetTooltip("Allows to separate cooldowns in different columns.");
                     }
 
                     ImGui.PopID();
@@ -373,7 +384,7 @@ namespace DelvUI.Interface.PartyCooldowns
 
             // MELEE
             [7549] = NewData(7549, JobRoles.DPSMelee, 22, 90, 10, 100, 1), // feint
-            [2258] = NewData(2258, JobIDs.NIN, 18, 60, 15, 30, 3), // trick attack
+            [2248] = NewData(2248, JobIDs.NIN, 15, 120, 20, 30, 3), // mug
             [3557] = NewData(3557, JobIDs.DRG, 52, 120, 15, 30, 3), // battle litany
             [7396] = NewData(7396, JobIDs.MNK, 70, 120, 15, 90, 3), // brotherhood
             [65] = NewData(65, JobIDs.MNK, 42, 90, 15, 50, 2), // mantra
@@ -381,12 +392,12 @@ namespace DelvUI.Interface.PartyCooldowns
 
             // RANGED
             [118] = NewData(118, JobIDs.BRD, 50, 120, 15, 30, 3), // battle voice
-            [7405] = NewData(7405, JobIDs.BRD, 62, 90, 15, 70, 2), // troubadour
+            [7405] = NewData(7405, JobIDs.BRD, 62, 90, 15, 70, 2, true, "90-120"), // troubadour
             [7408] = NewData(7408, JobIDs.BRD, 66, 90, 15, 40, 2), // nature's minne
             [25785] = NewData(25785, JobIDs.BRD, 90, 110, 15, 30, 3), // radiant finale
-            [16012] = NewData(16012, JobIDs.DNC, 56, 90, 15, 70, 2), // shield samba
+            [16012] = NewData(16012, JobIDs.DNC, 56, 90, 15, 70, 2, true, "90-120"), // shield samba
             [16004] = NewData(16004, JobIDs.DNC, 70, 120, 20, 30, 3), // technical step / finish
-            [16889] = NewData(16889, JobIDs.MCH, 56, 90, 15, 70, 2), // tactician
+            [16889] = NewData(16889, JobIDs.MCH, 56, 90, 15, 70, 2, true, "90-120"), // tactician
 
             // CASTER
             [7560] = NewData(7560, JobRoles.DPSCaster, 8, 90, 10, 100, 1), // addle
@@ -406,27 +417,27 @@ namespace DelvUI.Interface.PartyCooldowns
         };
 
         #region helpers
-        private static PartyCooldownData NewData(uint actionId, uint jobId, uint level, int cooldown, int effectDuration, int priority, int column, bool enabled = true)
+        private static PartyCooldownData NewData(uint actionId, uint jobId, uint level, int cooldown, int effectDuration, int priority, int column, bool enabled = true, string? overriddenCooldownText = null)
         {
-            PartyCooldownData data = NewData(actionId, level, cooldown, effectDuration, priority, column, enabled);
+            PartyCooldownData data = NewData(actionId, level, cooldown, effectDuration, priority, column, enabled, overriddenCooldownText);
             data.JobId = jobId;
             data.Role = JobRoles.Unknown;
 
             return data;
         }
 
-        private static PartyCooldownData NewData(uint actionId, JobRoles role, uint level, int cooldown, int effectDuration, int priority, int column, bool enabled = true)
+        private static PartyCooldownData NewData(uint actionId, JobRoles role, uint level, int cooldown, int effectDuration, int priority, int column, bool enabled = true, string? overriddenCooldownText = null)
         {
-            PartyCooldownData data = NewData(actionId, level, cooldown, effectDuration, priority, column, enabled);
+            PartyCooldownData data = NewData(actionId, level, cooldown, effectDuration, priority, column, enabled, overriddenCooldownText);
             data.JobId = 0;
             data.Role = role;
 
             return data;
         }
 
-        private static PartyCooldownData NewData(uint actionId, List<JobRoles> roles, uint level, int cooldown, int effectDuration, int priority, int column, bool enabled = true)
+        private static PartyCooldownData NewData(uint actionId, List<JobRoles> roles, uint level, int cooldown, int effectDuration, int priority, int column, bool enabled = true, string? overriddenCooldownText = null)
         {
-            PartyCooldownData data = NewData(actionId, level, cooldown, effectDuration, priority, column, enabled);
+            PartyCooldownData data = NewData(actionId, level, cooldown, effectDuration, priority, column, enabled, overriddenCooldownText);
             data.JobId = 0;
             data.Role = JobRoles.Unknown;
             data.Roles = roles;
@@ -434,7 +445,7 @@ namespace DelvUI.Interface.PartyCooldowns
             return data;
         }
 
-        private static PartyCooldownData NewData(uint actionId, uint level, int cooldown, int effectDuration, int priority, int column, bool enabled = true)
+        private static PartyCooldownData NewData(uint actionId, uint level, int cooldown, int effectDuration, int priority, int column, bool enabled = true, string? overriddenCooldownText = null)
         {
             PartyCooldownData data = new PartyCooldownData();
             data.ActionId = actionId;
@@ -444,6 +455,7 @@ namespace DelvUI.Interface.PartyCooldowns
             data.Priority = priority;
             data.Column = column;
             data.Enabled = enabled;
+            data.OverriddenCooldownText = overriddenCooldownText;
 
             return data;
         }

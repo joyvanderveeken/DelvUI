@@ -8,7 +8,10 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
+using Dalamud.Interface.GameFonts;
+using Dalamud.Logging;
 
 namespace DelvUI.Interface.GeneralElements
 {
@@ -37,6 +40,16 @@ namespace DelvUI.Interface.GeneralElements
         public SortedList<string, FontData> Fonts = new SortedList<string, FontData>();
         public bool SupportChineseCharacters = false;
         public bool SupportKoreanCharacters = false;
+        [JsonIgnore] public readonly Dictionary<string, string> GameFontMap = new Dictionary<string, string>()
+        {
+            {"Axis", "axis-ffxiv"},
+            {"Jupiter", "jupiter-ffxiv"},
+            {"JupiterNumeric", "jupiter-numeric-ffxiv"},
+            {"MiedingerMid", "meidinger-ffxiv"},
+            {"Meidinger", "meidinger-numberic-ffxiv"},
+            {"TrumpGothic", "trumpgothic-ffxiv"},
+            
+        };
 
         [JsonIgnore] public static readonly List<string> DefaultFontsKeys = new List<string>() { "RodinBold_12", "RodinBold_14", "RodinAutomata_14", "RodinAutomata_16", "RodinAutomata_18", "RodinAutomata_20", "RodinAutomata_22" };
         [JsonIgnore] public static string DefaultBigFontKey => DefaultFontsKeys[0];
@@ -64,7 +77,6 @@ namespace DelvUI.Interface.GeneralElements
                     var defaultFont = new FontData(str[0], int.Parse(str[1]));
                     Fonts.Add(key, defaultFont);
                 }
-
             }
 
             // sizes
@@ -112,16 +124,31 @@ namespace DelvUI.Interface.GeneralElements
 
             return fonts;
         }
+        
+        private string[] FontsFromGame()
+        {
+            string[] gameFontArray = Enum.GetNames(typeof(GameFontFamily)).Skip(1).ToArray();
+            string[] fonts = new string[gameFontArray.Length];
+
+            for (int i = 0; i < gameFontArray.Length; i++)
+            {
+                fonts[i] = GameFontMap[gameFontArray[i]];
+            }
+
+            return fonts;
+        }
 
         private void ReloadFonts()
         {
             var defaultFontsPath = ValidatePath(FontsManager.Instance.DefaultFontsPath);
             string[] defaultFonts = FontsFromPath(defaultFontsPath);
+            string[] gameFonts = FontsFromGame();
             string[] userFonts = FontsFromPath(ValidatedFontsPath);
 
-            _fonts = new string[defaultFonts.Length + userFonts.Length];
+            _fonts = new string[defaultFonts.Length + gameFonts.Length + userFonts.Length];
             defaultFonts.CopyTo(_fonts, 0);
-            userFonts.CopyTo(_fonts, defaultFonts.Length);
+            gameFonts.CopyTo(_fonts, defaultFonts.Length);
+            userFonts.CopyTo(_fonts, defaultFonts.Length + gameFonts.Length);
         }
 
         private bool AddNewEntry(int font, int size)
