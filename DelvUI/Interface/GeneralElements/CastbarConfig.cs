@@ -27,8 +27,8 @@ namespace DelvUI.Interface.GeneralElements
         [Order(62, collapseWith = nameof(ShowSlideCast))]
         public PluginConfigColor SlideCastColor = new PluginConfigColor(new(190f / 255f, 28f / 255f, 57f / 255f, 100f / 100f));
 
-        public PlayerCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig)
-            : base(position, size, castNameConfig, castTimeConfig)
+        public PlayerCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig, EditableLabelConfig optionalLabelConfig)
+            : base(position, size, castNameConfig, castTimeConfig, optionalLabelConfig)
         {
 
         }
@@ -40,9 +40,10 @@ namespace DelvUI.Interface.GeneralElements
 
             var castNameConfig = new LabelConfig(new Vector2(5, 0), "", DrawAnchor.Left, DrawAnchor.Left);
             var castTimeConfig = new NumericLabelConfig(new Vector2(-5, 0), "", DrawAnchor.Right, DrawAnchor.Right);
+            var optionalLabelConfig = new EditableLabelConfig(new Vector2(0,0), "", DrawAnchor.Left, DrawAnchor.Left);
             castTimeConfig.NumberFormat = 1;
-
-            return new PlayerCastbarConfig(pos, size, castNameConfig, castTimeConfig);
+            
+            return new PlayerCastbarConfig(pos, size, castNameConfig, castTimeConfig, optionalLabelConfig);
         }
     }
 
@@ -74,8 +75,8 @@ namespace DelvUI.Interface.GeneralElements
         [Order(63, collapseWith = nameof(UseColorForDamageTypes))]
         public PluginConfigColor DarknessDamageColor = new PluginConfigColor(new(188f / 255f, 19f / 255f, 254f / 255f, 100f / 100f));
 
-        public TargetCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig)
-            : base(position, size, castNameConfig, castTimeConfig)
+        public TargetCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig, EditableLabelConfig optionalLabelConfig)
+            : base(position, size, castNameConfig, castTimeConfig, optionalLabelConfig)
         {
 
         }
@@ -86,9 +87,10 @@ namespace DelvUI.Interface.GeneralElements
 
             var castNameConfig = new LabelConfig(new Vector2(5, 0), "", DrawAnchor.Left, DrawAnchor.Left);
             var castTimeConfig = new NumericLabelConfig(new Vector2(-5, 0), "", DrawAnchor.Right, DrawAnchor.Right);
+            var optionalLabelConfig = new EditableLabelConfig(new Vector2(0,0), "", DrawAnchor.Left, DrawAnchor.Left);
             castTimeConfig.NumberFormat = 1;
 
-            return new TargetCastbarConfig(pos, size, castNameConfig, castTimeConfig);
+            return new TargetCastbarConfig(pos, size, castNameConfig, castTimeConfig, optionalLabelConfig);
         }
     }
 
@@ -96,8 +98,8 @@ namespace DelvUI.Interface.GeneralElements
     [SubSection("Target of Target", 0)]
     public class TargetOfTargetCastbarConfig : TargetCastbarConfig
     {
-        public TargetOfTargetCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig)
-            : base(position, size, castNameConfig, castTimeConfig)
+        public TargetOfTargetCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig, EditableLabelConfig optionalLabelConfig)
+            : base(position, size, castNameConfig, castTimeConfig, optionalLabelConfig)
         {
 
         }
@@ -108,10 +110,11 @@ namespace DelvUI.Interface.GeneralElements
 
             var castNameConfig = new LabelConfig(new Vector2(0, 0), "", DrawAnchor.Center, DrawAnchor.Center);
             var castTimeConfig = new NumericLabelConfig(new Vector2(-5, 0), "", DrawAnchor.Right, DrawAnchor.Right);
+            var optionalLabelConfig = new EditableLabelConfig(new Vector2(0,0), "", DrawAnchor.Left, DrawAnchor.Left);
             castTimeConfig.Enabled = false;
             castTimeConfig.NumberFormat = 1;
 
-            var config = new TargetOfTargetCastbarConfig(pos, size, castNameConfig, castTimeConfig);
+            var config = new TargetOfTargetCastbarConfig(pos, size, castNameConfig, castTimeConfig, optionalLabelConfig);
             config.Anchor = DrawAnchor.Top;
             config.AnchorToUnitFrame = true;
             config.ShowIcon = false;
@@ -124,8 +127,8 @@ namespace DelvUI.Interface.GeneralElements
     [SubSection("Focus Target", 0)]
     public class FocusTargetCastbarConfig : TargetCastbarConfig
     {
-        public FocusTargetCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig)
-            : base(position, size, castNameConfig, castTimeConfig)
+        public FocusTargetCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig, EditableLabelConfig optionalLabelConfig)
+            : base(position, size, castNameConfig, castTimeConfig, optionalLabelConfig)
         {
 
         }
@@ -136,10 +139,11 @@ namespace DelvUI.Interface.GeneralElements
 
             var castNameConfig = new LabelConfig(new Vector2(0, 0), "", DrawAnchor.Center, DrawAnchor.Center);
             var castTimeConfig = new NumericLabelConfig(new Vector2(-5, 0), "", DrawAnchor.Right, DrawAnchor.Right);
+            var optionalLabelConfig = new EditableLabelConfig(new Vector2(0,0), "", DrawAnchor.Left, DrawAnchor.Left);
             castTimeConfig.Enabled = false;
             castTimeConfig.NumberFormat = 1;
 
-            var config = new FocusTargetCastbarConfig(pos, size, castNameConfig, castTimeConfig);
+            var config = new FocusTargetCastbarConfig(pos, size, castNameConfig, castTimeConfig, optionalLabelConfig);
             config.Anchor = DrawAnchor.Top;
             config.AnchorToUnitFrame = true;
             config.ShowIcon = false;
@@ -158,8 +162,8 @@ namespace DelvUI.Interface.GeneralElements
         [Order(17, collapseWith = nameof(AnchorToUnitFrame))]
         public DrawAnchor UnitFrameAnchor = DrawAnchor.Bottom;
 
-        public UnitFrameCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig)
-            : base(position, size, castNameConfig, castTimeConfig)
+        public UnitFrameCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig, EditableLabelConfig optionalLabelConfig)
+            : base(position, size, castNameConfig, castTimeConfig, optionalLabelConfig)
         {
 
         }
@@ -183,6 +187,10 @@ namespace DelvUI.Interface.GeneralElements
         [Checkbox("Show Current Cast Time + Max Cast Time")]
         [Order(6)]
         public bool ShowMaxCastTime = false;
+        
+        [Checkbox("Replace spell names with original Japanese names")]
+        [Order(7)]
+        public bool ReplaceName = false;
 
         [Checkbox("Separate Icon", spacing = true)]
         [Order(100)]
@@ -202,15 +210,19 @@ namespace DelvUI.Interface.GeneralElements
         [NestedConfig("Cast Time", 505)]
         public NumericLabelConfig CastTimeLabel;
 
+        [NestedConfig("Optional Label", 506)]
+        public EditableLabelConfig OptionalLabel;
+
         [ColorEdit4("Color" + "##ReverseFill")]
         [Order(515, collapseWith = nameof(UseReverseFill))]
         public PluginConfigColor ReverseFillColor = new(new Vector4(255f / 255f, 0f / 255f, 0f / 255f, 100f / 100f));
 
-        public CastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig)
+        public CastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig, EditableLabelConfig optionalLabelConfig)
             : base(position, size, new PluginConfigColor(new(0f / 255f, 162f / 255f, 252f / 255f, 100f / 100f)), BarDirection.Right)
         {
             CastNameLabel = castNameConfig;
             CastTimeLabel = castTimeConfig;
+            OptionalLabel = optionalLabelConfig;
 
             Strata = StrataLevel.MID;
         }

@@ -280,12 +280,18 @@ namespace DelvUI.Interface.GeneralElements
                 {
                     labels.Add(Config.OptionalLabelConfig);
                 }
+
+                if (!Utils.IsHealthLabel(Config.SecondOptionalLabelConfig))
+                {
+                    labels.Add(Config.SecondOptionalLabelConfig);
+                }
             }
             else
             {
                 labels.Add(Config.LeftLabelConfig);
                 labels.Add(Config.RightLabelConfig);
                 labels.Add(Config.OptionalLabelConfig);
+                labels.Add(Config.SecondOptionalLabelConfig);
             }
 
             return labels.ToArray();

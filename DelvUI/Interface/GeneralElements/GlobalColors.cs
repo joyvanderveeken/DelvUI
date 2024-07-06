@@ -32,6 +32,7 @@ namespace DelvUI.Interface.GeneralElements
             var meleeColorConfig = sender.GetConfigObject<MeleeColorConfig>();
             var rangedColorConfig = sender.GetConfigObject<RangedColorConfig>();
             var castersColorConfig = sender.GetConfigObject<CastersColorConfig>();
+            var discipleColorConfig = sender.GetConfigObject<DiscipleColorConfig>();
 
             ColorMap = new Dictionary<uint, PluginConfigColor>()
             {
@@ -77,19 +78,19 @@ namespace DelvUI.Interface.GeneralElements
                 [JobIDs.BLU] = castersColorConfig.BLUColor,
 
                 // crafters
-                [JobIDs.CRP] = _rolesColorConfig.HANDColor,
-                [JobIDs.BSM] = _rolesColorConfig.HANDColor,
-                [JobIDs.ARM] = _rolesColorConfig.HANDColor,
-                [JobIDs.GSM] = _rolesColorConfig.HANDColor,
-                [JobIDs.LTW] = _rolesColorConfig.HANDColor,
-                [JobIDs.WVR] = _rolesColorConfig.HANDColor,
-                [JobIDs.ALC] = _rolesColorConfig.HANDColor,
-                [JobIDs.CUL] = _rolesColorConfig.HANDColor,
+                [JobIDs.CRP] = discipleColorConfig.HANDColor,
+                [JobIDs.BSM] = discipleColorConfig.HANDColor,
+                [JobIDs.ARM] = discipleColorConfig.HANDColor,
+                [JobIDs.GSM] = discipleColorConfig.HANDColor,
+                [JobIDs.LTW] = discipleColorConfig.HANDColor,
+                [JobIDs.WVR] = discipleColorConfig.HANDColor,
+                [JobIDs.ALC] = discipleColorConfig.HANDColor,
+                [JobIDs.CUL] = discipleColorConfig.HANDColor,
 
                 // gatherers
-                [JobIDs.MIN] = _rolesColorConfig.LANDColor,
-                [JobIDs.BOT] = _rolesColorConfig.LANDColor,
-                [JobIDs.FSH] = _rolesColorConfig.LANDColor
+                [JobIDs.MIN] = discipleColorConfig.LANDColor,
+                [JobIDs.BOT] = discipleColorConfig.LANDColor,
+                [JobIDs.FSH] = discipleColorConfig.LANDColor
             };
         }
 
@@ -125,7 +126,7 @@ namespace DelvUI.Interface.GeneralElements
 
         public PluginConfigColor? ColorForJobId(uint jobId) => ColorMap.TryGetValue(jobId, out PluginConfigColor? color) ? color : null;
 
-        public PluginConfigColor SafeColorForJobId(uint jobId) => ColorForJobId(jobId) ?? _miscColorConfig.NPCNeutralColor;
+        public PluginConfigColor SafeColorForJobId(uint jobId) => ColorForJobId(jobId) ?? _miscColorConfig.NPCHostileColor;
 
         public PluginConfigColor? RoleColorForJobId(uint jobId)
         {
@@ -152,6 +153,7 @@ namespace DelvUI.Interface.GeneralElements
         public PluginConfigColor NPCFriendlyColor => _miscColorConfig.NPCFriendlyColor;
         public PluginConfigColor NPCHostileColor => _miscColorConfig.NPCHostileColor;
         public PluginConfigColor NPCNeutralColor => _miscColorConfig.NPCNeutralColor;
+        public PluginConfigColor NPCAutomataColor => _miscColorConfig.NPCAutomataColor;
     }
 
     [Disableable(false)]
@@ -320,6 +322,22 @@ namespace DelvUI.Interface.GeneralElements
 
     [Disableable(false)]
     [Section("Colors")]
+    [SubSection("Caster", 0)]
+    public class DiscipleColorConfig : PluginConfigObject
+    {
+        public new static DiscipleColorConfig DefaultConfig() { return new DiscipleColorConfig(); }
+
+        [ColorEdit4("Black Mage", spacing = true)]
+        [Order(5)]
+        public PluginConfigColor HANDColor = new PluginConfigColor(new(99f / 255f, 172f / 255f, 14f / 255f, 100f / 100f));
+
+        [ColorEdit4("Summoner")]
+        [Order(10)]
+        public PluginConfigColor LANDColor = new PluginConfigColor(new(99f / 255f, 172f / 255f, 14f / 255f, 100f / 100f));
+    }
+
+    [Disableable(false)]
+    [Section("Colors")]
     [SubSection("Roles", 0)]
     public class RolesColorConfig : PluginConfigObject
     {
@@ -396,6 +414,10 @@ namespace DelvUI.Interface.GeneralElements
         [ColorEdit4("NPC Neutral")]
         [Order(30)]
         public PluginConfigColor NPCNeutralColor = new PluginConfigColor(new(218f / 255f, 157f / 255f, 46f / 255f, 100f / 100f));
+
+        [ColorEdit4("NPC Automata")]
+        [Order(35)]
+        public PluginConfigColor NPCAutomataColor = new PluginConfigColor(new(220f / 255f, 216f / 255f, 192f / 255f, 100f / 100f));
     }
 
     [Exportable(false)]

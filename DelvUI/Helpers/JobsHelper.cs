@@ -428,7 +428,7 @@ namespace DelvUI.Helpers
         public static Dictionary<uint, string> JobNames = new Dictionary<uint, string>()
         {
             // tanks
-            [JobIDs.GLA] = "GLA",
+            [JobIDs.GLA] = "GLD",
             [JobIDs.MRD] = "MRD",
             [JobIDs.PLD] = "PLD",
             [JobIDs.WAR] = "WAR",
@@ -541,6 +541,65 @@ namespace DelvUI.Helpers
             [JobIDs.MIN] = "Miner",
             [JobIDs.BOT] = "Botanist",
             [JobIDs.FSH] = "Fisher",
+        };
+
+        public static Dictionary<uint, string> JobRoleIcons = new Dictionary<uint, string>()
+        {
+            // tanks
+            [JobIDs.GLA] = "ô",
+            [JobIDs.MRD] = "ô",
+            [JobIDs.PLD] = "ô",
+            [JobIDs.WAR] = "ô",
+            [JobIDs.DRK] = "ô",
+            [JobIDs.GNB] = "ô",
+
+            // melee dps
+            [JobIDs.PGL] = "õ",
+            [JobIDs.LNC] = "õ",
+            [JobIDs.ROG] = "õ",
+            [JobIDs.MNK] = "õ",
+            [JobIDs.DRG] = "õ",
+            [JobIDs.NIN] = "õ",
+            [JobIDs.SAM] = "õ",
+            [JobIDs.RPR] = "õ",
+            [JobIDs.VPR] = "õ",
+
+            // ranged phys dps
+            [JobIDs.ARC] = "õ",
+            [JobIDs.BRD] = "õ",
+            [JobIDs.MCH] = "õ",
+            [JobIDs.DNC] = "õ",
+
+            // ranged magic dps
+            [JobIDs.THM] = "õ",
+            [JobIDs.ACN] = "õ",
+            [JobIDs.BLM] = "õ",
+            [JobIDs.SMN] = "õ",
+            [JobIDs.RDM] = "õ",
+            [JobIDs.BLU] = "õ",
+            [JobIDs.PCT] = "õ",
+
+            // healers
+            [JobIDs.CNJ] = "+",
+            [JobIDs.WHM] = "+",
+            [JobIDs.SCH] = "+",
+            [JobIDs.SGE] = "+",
+            [JobIDs.AST] = "+",
+
+            // crafters
+            [JobIDs.CRP] = "ó",
+            [JobIDs.BSM] = "ó",
+            [JobIDs.ARM] = "ó",
+            [JobIDs.GSM] = "ó",
+            [JobIDs.LTW] = "ó",
+            [JobIDs.WVR] = "ó",
+            [JobIDs.ALC] = "ó",
+            [JobIDs.CUL] = "ó",
+
+            // gatherers
+            [JobIDs.MIN] = "ó",
+            [JobIDs.BOT] = "ó",
+            [JobIDs.FSH] = "ó",
         };
 
         public static Dictionary<JobRoles, string> RoleNames = new Dictionary<JobRoles, string>()

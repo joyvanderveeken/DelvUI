@@ -230,7 +230,7 @@ namespace DelvUI.Helpers
         {
             if (actor == null || actor is not ICharacter character)
             {
-                return GlobalColors.Instance.NPCNeutralColor;
+                return GlobalColors.Instance.NPCAutomataColor;
             }
 
             if (character.ObjectKind == ObjectKind.Player ||

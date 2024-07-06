@@ -15,8 +15,8 @@ namespace DelvUI.Interface.GeneralElements
         [NestedConfig("Tank Stance Indicator", 122, spacing = true)]
         public TankStanceIndicatorConfig TankStanceIndicatorConfig = new TankStanceIndicatorConfig();
 
-        public PlayerUnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig)
-            : base(position, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig)
+        public PlayerUnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig, EditableLabelConfig secondOptionalLabelConfig)
+            : base(position, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig, secondOptionalLabelConfig)
         {
         }
 
@@ -28,8 +28,9 @@ namespace DelvUI.Interface.GeneralElements
             var leftLabelConfig = new EditableLabelConfig(new Vector2(5, 0), "[name]", DrawAnchor.TopLeft, DrawAnchor.BottomLeft);
             var rightLabelConfig = new EditableLabelConfig(new Vector2(-5, 0), "[health:current-short] | [health:percent]", DrawAnchor.TopRight, DrawAnchor.BottomRight);
             var optionalLabelConfig = new EditableLabelConfig(new Vector2(0, 0), "", DrawAnchor.Center, DrawAnchor.Center);
+            var secondOptionalLabelConfig = new EditableLabelConfig(new Vector2(0, 0), "", DrawAnchor.Center, DrawAnchor.Center);
 
-            var config = new PlayerUnitFrameConfig(pos, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig);
+            var config = new PlayerUnitFrameConfig(pos, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig, secondOptionalLabelConfig);
 
             return config;
         }
@@ -72,8 +73,8 @@ namespace DelvUI.Interface.GeneralElements
     [SubSection("Target", 0)]
     public class TargetUnitFrameConfig : UnitFrameConfig
     {
-        public TargetUnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig)
-            : base(position, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig)
+        public TargetUnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig, EditableLabelConfig secondOptionalLabelConfig)
+            : base(position, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig, secondOptionalLabelConfig)
         {
         }
 
@@ -85,8 +86,9 @@ namespace DelvUI.Interface.GeneralElements
             var leftLabelConfig = new EditableLabelConfig(new Vector2(5, 0), "[health:current-short] | [health:percent]", DrawAnchor.TopLeft, DrawAnchor.BottomLeft);
             var rightLabelConfig = new EditableLabelConfig(new Vector2(-5, 0), "[name]", DrawAnchor.TopRight, DrawAnchor.BottomRight);
             var optionalLabelConfig = new EditableLabelConfig(new Vector2(0, 0), "", DrawAnchor.Center, DrawAnchor.Center);
+            var secondOptionalLabelConfig = new EditableLabelConfig(new Vector2(0,0), "", DrawAnchor.Center, DrawAnchor.Center);
 
-            return new TargetUnitFrameConfig(pos, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig);
+            return new TargetUnitFrameConfig(pos, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig, secondOptionalLabelConfig);
         }
     }
 
@@ -95,8 +97,8 @@ namespace DelvUI.Interface.GeneralElements
     [SubSection("Target of Target", 0)]
     public class TargetOfTargetUnitFrameConfig : UnitFrameConfig
     {
-        public TargetOfTargetUnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig)
-            : base(position, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig)
+        public TargetOfTargetUnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig, EditableLabelConfig secondOptionalLabelConfig)
+            : base(position, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig, secondOptionalLabelConfig)
         {
         }
 
@@ -111,8 +113,9 @@ namespace DelvUI.Interface.GeneralElements
             var leftLabelConfig = new EditableLabelConfig(new Vector2(0, 0), "[name]", DrawAnchor.Top, DrawAnchor.Bottom);
             var rightLabelConfig = new EditableLabelConfig(new Vector2(0, 0), "", DrawAnchor.Center, DrawAnchor.TopLeft);
             var optionalLabelConfig = new EditableLabelConfig(new Vector2(0, 0), "", DrawAnchor.Center, DrawAnchor.BottomLeft);
+            var secondOptionalLabelConfig = new EditableLabelConfig(new Vector2(0,0), "", DrawAnchor.Center, DrawAnchor.Center);
 
-            return new TargetOfTargetUnitFrameConfig(pos, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig);
+            return new TargetOfTargetUnitFrameConfig(pos, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig, secondOptionalLabelConfig);
         }
     }
 
@@ -121,8 +124,8 @@ namespace DelvUI.Interface.GeneralElements
     [SubSection("Focus Target", 0)]
     public class FocusTargetUnitFrameConfig : UnitFrameConfig
     {
-        public FocusTargetUnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig)
-            : base(position, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig)
+        public FocusTargetUnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig, EditableLabelConfig secondOptionalLabelConfig)
+            : base(position, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig, secondOptionalLabelConfig)
         {
         }
 
@@ -137,8 +140,9 @@ namespace DelvUI.Interface.GeneralElements
             var leftLabelConfig = new EditableLabelConfig(new Vector2(0, 0), "[name]", DrawAnchor.Top, DrawAnchor.Bottom);
             var rightLabelConfig = new EditableLabelConfig(new Vector2(0, 0), "", DrawAnchor.Center, DrawAnchor.Center);
             var optionalLabelConfig = new EditableLabelConfig(new Vector2(0, 0), "", DrawAnchor.Bottom, DrawAnchor.Bottom);
+            var secondOptionalLabelConfig = new EditableLabelConfig(new Vector2(0,0), "", DrawAnchor.Center, DrawAnchor.Center);
 
-            return new FocusTargetUnitFrameConfig(pos, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig);
+            return new FocusTargetUnitFrameConfig(pos, size, leftLabelConfig, rightLabelConfig, optionalLabelConfig, secondOptionalLabelConfig);
         }
     }
 
@@ -224,6 +228,9 @@ namespace DelvUI.Interface.GeneralElements
         [NestedConfig("Optional Text", 131)]
         public EditableLabelConfig OptionalLabelConfig = null!;
 
+        [NestedConfig("Secondary Optional Text", 132)]
+        public EditableLabelConfig SecondOptionalLabelConfig = null!;
+
         [NestedConfig("Role/Job Icon", 135)]
         public RoleJobIconConfig RoleIconConfig = new RoleJobIconConfig(
             new Vector2(5, 0),
@@ -255,7 +262,7 @@ namespace DelvUI.Interface.GeneralElements
         [NestedConfig("Visibility", 200)]
         public VisibilityConfig VisibilityConfig = new VisibilityConfig();
 
-        public UnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig)
+        public UnitFrameConfig(Vector2 position, Vector2 size, EditableLabelConfig leftLabelConfig, EditableLabelConfig rightLabelConfig, EditableLabelConfig optionalLabelConfig, EditableLabelConfig secondOptionalLabelConfig)
             : base(position, size, new PluginConfigColor(new(40f / 255f, 40f / 255f, 40f / 255f, 100f / 100f)))
         {
             Position = position;
@@ -263,6 +270,7 @@ namespace DelvUI.Interface.GeneralElements
             LeftLabelConfig = leftLabelConfig;
             RightLabelConfig = rightLabelConfig;
             OptionalLabelConfig = optionalLabelConfig;
+            SecondOptionalLabelConfig = secondOptionalLabelConfig;
             BackgroundColor = new PluginConfigColor(new(0f / 255f, 0f / 255f, 0f / 255f, 100f / 100f));
             RoleIconConfig.Enabled = false;
             SignIconConfig.Enabled = false;

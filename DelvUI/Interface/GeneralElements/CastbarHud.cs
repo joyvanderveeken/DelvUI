@@ -12,6 +12,7 @@ using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Text.RegularExpressions;
 using LuminaAction = Lumina.Excel.GeneratedSheets.Action;
 using StructsBattleChara = FFXIVClientStructs.FFXIV.Client.Game.Character.BattleChara;
 
@@ -22,6 +23,7 @@ namespace DelvUI.Interface.GeneralElements
         private CastbarConfig Config => (CastbarConfig)_config;
         private readonly LabelHud _castNameLabel;
         private readonly LabelHud _castTimeLabel;
+        private readonly LabelHud _optionalLabel;
 
         protected LastUsedCast? LastUsedCast;
 
@@ -34,6 +36,7 @@ namespace DelvUI.Interface.GeneralElements
         {
             _castNameLabel = new LabelHud(config.CastNameLabel);
             _castTimeLabel = new LabelHud(config.CastTimeLabel);
+            _optionalLabel = new LabelHud(config.OptionalLabel);
         }
 
         public void StopPreview()
@@ -130,7 +133,8 @@ namespace DelvUI.Interface.GeneralElements
 
             string original = LastUsedCast?.ActionText ?? "";
             string? castName = EncryptedStringsHelper.GetString(original).CheckForUpperCase();
-            Config.CastNameLabel.SetText(Config.Preview ? "Cast Name" : castName ?? "");
+            string? formatCastName = Config.ReplaceName ? ReplaceCastName(castName) : castName;
+            Config.CastNameLabel.SetText(Config.Preview ? "Cast Name" : "SKL: " + formatCastName ?? "");
 
             AddDrawAction(Config.CastNameLabel.StrataLevel, () =>
             {
@@ -159,6 +163,11 @@ namespace DelvUI.Interface.GeneralElements
             AddDrawAction(Config.CastTimeLabel.StrataLevel, () =>
             {
                 _castTimeLabel.Draw(timePos, size, Actor);
+            });
+
+            AddDrawAction(Config.OptionalLabel.StrataLevel, () =>
+            {
+                _optionalLabel.Draw(startPos, size, Actor);
             });
         }
 
@@ -220,6 +229,199 @@ namespace DelvUI.Interface.GeneralElements
         public virtual Vector2 GetSize() => Config.Size;
 
         public virtual bool ShouldShow() => true;
+
+        public static string ReplaceCastName(string input)
+        {
+            string? output = input;
+
+            // Define the patterns and replacements
+            string[] patterns = 
+            { 
+                // WHM
+                @"Cure II$", 
+                @"Cure III$", 
+                @"Cure IV$",
+                @"Medica II$",
+                @"Medica III$",
+                @"Aero II$",
+                @"Stone II$",
+                @"Stone III$",
+                @"Stone IV$",
+                @"Glare III$",
+                @"Holy III$",
+
+                // SCH
+                @"Ruin II$",
+                @"Bio II$",
+                @"Broil II$",
+                @"Broil III$",
+                @"Broil IV",
+
+                // AST
+                @"Malefic II$",
+                @"Malefic III$",
+                @"Malefic IV$",
+                @"Gravity II$",
+                @"Benefic II$",
+
+                // SGE
+                @"Dosis II$",
+                @"Dosis III$",
+
+                // BLM
+                @"Fire II$",
+                @"Fire III$",
+                @"Fire IV$",
+                @"Blizzard II$",
+                @"Blizzard III$",
+                @"Blizzard IV$",
+                @"Thunder II$",
+                @"Thunder III$",
+                @"Thunder IV$",
+
+                // SMN
+                @"Ruin II$",
+                @"Ruin III$",
+                @"Ruin IV$",
+
+                // RDM
+                @"Jolt II$",
+                @"Jolt III$",
+                @"Verthunder II$",
+                @"Verthunder III$",
+                @"Veraero II$",
+                @"Veraero III$",
+
+            };
+
+            string[] replacements = 
+            { 
+                // WHM
+                "Cura", 
+                "Curaga", 
+                "Curaja",
+                "Medicara",
+                "Medicaga",
+                "Aerora",
+                "Stonera",
+                "Stonega",
+                "Stoneja",
+                "Glarega",
+                "Holyga",
+                
+                // SCH
+                "Ruinra",
+                "Biora",
+                "Broilra",
+                "Broilga",
+                "Broilja",
+
+                // AST
+                "Malefira",
+                "Malefiga",
+                "Malefija",
+                "Gravira",
+                "Benefira",
+
+                // SGE
+                "Dosira",
+                "Dosiga",
+
+                // BLM
+                "Fira",
+                "Firaga",
+                "Firaja",
+                "Blizzara",
+                "Blizzaga",
+                "Blizzaja",
+                "Thundera",
+                "Thundaga",
+                "Thundaja",
+
+                // SMN
+                "Ruinra",
+                "Ruinga",
+                "Ruinja",
+
+                // RDM
+                "Joltra",
+                "Joltga",
+                "Verthundera",
+                "Verthundaga",
+                "Veraerora",
+                "Veraeroga",
+
+            };
+
+            // Flag to check if any replacement was made
+            bool replacementMade = false;
+
+            // Perform the replacements
+            for (int i = 0; i < patterns.Length; i++)
+            {
+                string updatedString = Regex.Replace(output, patterns[i], replacements[i]);
+                if (updatedString != output)
+                {
+                    output = updatedString;
+                    replacementMade = true;
+                }
+            }
+
+            // Return the updated string or original string if no replacement was made
+            return replacementMade ? output : input;
+        }
+
+        // private string? ReplaceCastName(string str)
+        // {
+        //     return str switch
+        //     {
+        //         // BLM
+        //         @"Fire II$" => "Fira",
+        //         @"Fire III$" => "Firaga",
+        //         @"Fire IV" => "Firaja",
+        //         // 25794 => "High Fira",
+        //         // 25793 => "Blizzara",
+        //         // 154 => "Blizzaga",
+        //         // 3576 => "Blizzaja",
+        //         // 25795 => "High Blizzara",
+        //         // 7447 => "Thundara",
+        //         // 153 => "Thundaga",
+        //         // 7420 => "Thundaja",
+
+        //         // // RDM
+        //         // 7524 => "Joltra",
+        //         // 16524 => "Verthundara",
+        //         // 25855 => "Verthundaga",
+        //         // 16525 => "Veraerora",
+        //         // 25856 => "Veraeroga",
+
+        //         // // WHM
+        //         // 127 => "Stonera",
+        //         // 3568 => "Stonega",
+        //         // 7431 => "Stoneja",
+        //         // 132 => "Aerora",
+        //         @"Cure II$" => "Cura",
+        //         @"Cure III$" => "Curaga",
+        //         // 133 => "Medicara",
+        //         // 25759 => "Glarega",
+        //         // 25860 => "Holyga",
+
+        //         // // AST
+        //         // 3610 => "Benefira",
+        //         // 3608 => "Combustra",
+        //         // 16554 => "Combustga",
+        //         // 3598 => "Malefira",
+        //         // 7442 => "Malefiga",
+        //         // 16555 => "Malefija",
+        //         // 25872 => "Gravira",
+
+        //         // 27174 => "Nearsight",
+        //         // 27175 => "Farsight",
+        //         // 28280 => "Demigod Double",
+        //         _ => str
+        //     };
+        // }
+
     }
 
     public class PlayerCastbarHud : CastbarHud

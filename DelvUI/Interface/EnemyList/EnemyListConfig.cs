@@ -218,8 +218,9 @@ namespace DelvUI.Interface.EnemyList
             castTimeConfig.Enabled = false;
             castTimeConfig.FontID = FontsConfig.DefaultMediumFontKey;
             castTimeConfig.NumberFormat = 1;
+            var optionalLabelConfig = new EditableLabelConfig(new Vector2(0,0), "", DrawAnchor.Left, DrawAnchor.Left);
 
-            var config = new EnemyListCastbarConfig(Vector2.Zero, size, castNameConfig, castTimeConfig);
+            var config = new EnemyListCastbarConfig(Vector2.Zero, size, castNameConfig, castTimeConfig, optionalLabelConfig);
             config.HealthBarAnchor = DrawAnchor.Bottom;
             config.Anchor = DrawAnchor.Bottom;
             config.ShowIcon = false;
@@ -227,12 +228,16 @@ namespace DelvUI.Interface.EnemyList
             return config;
         }
 
+        [Checkbox("Hide Name When Casting")]
+        [Order(6)]
+        public bool HideNameWhenCasting = false;
+
         [Anchor("Health Bar Anchor")]
         [Order(16)]
         public DrawAnchor HealthBarAnchor = DrawAnchor.BottomLeft;
 
-        public EnemyListCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig)
-            : base(position, size, castNameConfig, castTimeConfig)
+        public EnemyListCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig, EditableLabelConfig optionalLabelConfig)
+            : base(position, size, castNameConfig, castTimeConfig, optionalLabelConfig)
         {
 
         }

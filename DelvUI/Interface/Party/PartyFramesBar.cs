@@ -731,9 +731,9 @@ namespace DelvUI.Interface.Party
         {
             return status switch
             {
-                PartyMemberStatus.ViewingCutscene => "[Viewing Cutscene]",
-                PartyMemberStatus.Offline => "[Offline]",
-                PartyMemberStatus.Dead => "[Dead]",
+                PartyMemberStatus.ViewingCutscene => "Viewing Cutscene",
+                PartyMemberStatus.Offline => "Offline",
+                PartyMemberStatus.Dead => "Dead",
                 _ => null
             };
         }
