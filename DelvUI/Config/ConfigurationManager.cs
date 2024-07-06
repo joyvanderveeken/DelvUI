@@ -658,6 +658,7 @@ namespace DelvUI.Config
             typeof(MeleeColorConfig),
             typeof(RangedColorConfig),
             typeof(CastersColorConfig),
+            typeof(DiscipleColorConfig),
             typeof(RolesColorConfig),
             typeof(MiscColorConfig),
 

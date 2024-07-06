@@ -152,8 +152,8 @@ namespace DelvUI.Helpers
 
             TimeSpan t = TimeSpan.FromSeconds(duration);
 
-            if (t.Hours >= 1) { return t.Hours + "h"; }
-            if (t.Minutes >= 5) { return t.Minutes + "m"; }
+            if (t.Hours >= 1) { return ""; }
+            if (t.Minutes >= 10) { return ""; }
             if (t.Minutes >= 1) { return $"{t.Minutes}:{t.Seconds:00}"; }
 
             return duration.ToString("N" + decimalCount, ConfigurationManager.Instance.ActiveCultreInfo);

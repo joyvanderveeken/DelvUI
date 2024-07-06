@@ -143,15 +143,17 @@ namespace DelvUI.Interface.GeneralElements
             // castbar
             Vector2 castbarSize = new Vector2(config.BarConfig.Size.X, 10);
 
-            LabelConfig castNameConfig = new LabelConfig(new Vector2(0, -1), "", DrawAnchor.Center, DrawAnchor.Center);
+            var castNameConfig = new LabelConfig(new Vector2(0, -1), "", DrawAnchor.Center, DrawAnchor.Center);
             castNameConfig.FontID = FontsConfig.DefaultSmallFontKey;
 
-            NumericLabelConfig castTimeConfig = new NumericLabelConfig(new Vector2(-5, 0), "", DrawAnchor.Right, DrawAnchor.Right);
+            var castTimeConfig = new NumericLabelConfig(new Vector2(-5, 0), "", DrawAnchor.Right, DrawAnchor.Right);
             castTimeConfig.Enabled = false;
             castTimeConfig.FontID = FontsConfig.DefaultSmallFontKey;
             castTimeConfig.NumberFormat = 1;
 
-            NameplateCastbarConfig castbarConfig = new NameplateCastbarConfig(Vector2.Zero, castbarSize, castNameConfig, castTimeConfig);
+            var optionalLabelConfig = new EditableLabelConfig(new Vector2(0,0), "", DrawAnchor.Left, DrawAnchor.Left);
+
+            var castbarConfig = new NameplateCastbarConfig(Vector2.Zero, castbarSize, castNameConfig, castTimeConfig, optionalLabelConfig);
             castbarConfig.HealthBarAnchor = DrawAnchor.BottomLeft;
             castbarConfig.Anchor = DrawAnchor.TopLeft;
             castbarConfig.ShowIcon = false;
@@ -696,8 +698,8 @@ namespace DelvUI.Interface.GeneralElements
         [Order(16)]
         public DrawAnchor HealthBarAnchor = DrawAnchor.BottomLeft;
 
-        public NameplateCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig)
-            : base(position, size, castNameConfig, castTimeConfig)
+        public NameplateCastbarConfig(Vector2 position, Vector2 size, LabelConfig castNameConfig, NumericLabelConfig castTimeConfig, EditableLabelConfig optionalLabelConfig)
+            : base(position, size, castNameConfig, castTimeConfig, optionalLabelConfig)
         {
 
         }

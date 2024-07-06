@@ -256,10 +256,14 @@ namespace DelvUI.Interface.EnemyList
 
                 // labels
                 string? name = Config.Preview ? "Fake Name" : null;
-                AddDrawAction(Configs.HealthBar.NameLabel.StrataLevel, () =>
+
+                if (DrawName(character))
                 {
-                    _nameLabelHud.Draw(origin + pos, Configs.HealthBar.Size, character, name, currentHp, maxHp);
-                });
+                    AddDrawAction(Configs.HealthBar.NameLabel.StrataLevel, () =>
+                    {
+                        _nameLabelHud.Draw(origin + pos, Configs.HealthBar.Size, character, name, currentHp, maxHp);
+                    });
+                }
 
                 AddDrawAction(Configs.HealthBar.HealthLabel.StrataLevel, () =>
                 {
@@ -382,6 +386,15 @@ namespace DelvUI.Interface.EnemyList
             float alpha = Configs.HealthBar.RangeConfig.AlphaForDistance(distance, currentAlpha) / 100f;
 
             return color.WithAlpha(alpha);
+        }
+
+        private bool DrawName(ICharacter? character)
+        {
+            if (Utils.IsActorCasting(character) && Configs.CastBar.Enabled && Configs.CastBar.HideNameWhenCasting)
+            {
+                return false;
+            }
+            return true;
         }
     }
 
