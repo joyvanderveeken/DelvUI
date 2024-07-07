@@ -322,16 +322,16 @@ namespace DelvUI.Interface.GeneralElements
 
     [Disableable(false)]
     [Section("Colors")]
-    [SubSection("Caster", 0)]
+    [SubSection("Disciples", 0)]
     public class DiscipleColorConfig : PluginConfigObject
     {
         public new static DiscipleColorConfig DefaultConfig() { return new DiscipleColorConfig(); }
 
-        [ColorEdit4("Black Mage", spacing = true)]
+        [ColorEdit4("Crafters", spacing = true)]
         [Order(5)]
         public PluginConfigColor HANDColor = new PluginConfigColor(new(99f / 255f, 172f / 255f, 14f / 255f, 100f / 100f));
 
-        [ColorEdit4("Summoner")]
+        [ColorEdit4("Gatherers")]
         [Order(10)]
         public PluginConfigColor LANDColor = new PluginConfigColor(new(99f / 255f, 172f / 255f, 14f / 255f, 100f / 100f));
     }
